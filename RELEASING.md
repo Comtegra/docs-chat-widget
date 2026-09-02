@@ -49,3 +49,33 @@ npm publish --workspace packages/docusaurus-theme --access public --provenance=f
 
 Wersje: paczki niezależne; zależność theme→client podbijana automatycznie
 (`updateInternalDependencies: patch`). Strona `fixtures/site` jest ignorowana.
+
+## Po wydaniu — weryfikacja
+
+```bash
+npm view @comtegra/docs-chat-client version
+npm view @comtegra/docusaurus-theme-docs-chat version dependencies
+```
+
+Wersje zgodne z Version PR + zależność theme→client podbita. Provenance: zakładka
+"Provenance" na stronie paczki (wydania z CI mają atestację; bootstrap jej nie ma — to OK).
+
+## Wycofanie złego wydania
+
+npm nie pozwala nadpisać wersji. Kolejność:
+
+1. Cofnij `latest` na ostatnią dobrą: `npm dist-tag add @comtegra/<paczka>@<dobra> latest`
+   — świeże `npm install` przestaje brać felerną natychmiast.
+2. Oznacz felerną: `npm deprecate @comtegra/<paczka>@<zła> "użyj <dobra>: <powód>"`.
+3. Wydaj poprawkę normalnym cyklem (changeset → Version PR → merge).
+
+`npm unpublish` tylko w ostateczności (okno 72 h, łamie buildy konsumentów z lockfile'em).
+
+## Aktualizacja u konsumentów
+
+- **Podręcznik eZD (theme):** `npm update @comtegra/docusaurus-theme-docs-chat` + commit
+  lockfile'a w repo klienta (PR jak każda zmiana zależności). Semver `^` NIE aktualizuje się
+  samo przy `npm ci`.
+- **Aplikacja EZD (IIFE):** plik `dist/docs-chat-client.iife.min.js` jest wersjonowany razem
+  z paczką — klient podmienia plik z nowego tarballa (`npm pack @comtegra/docs-chat-client`
+  albo CDN typu jsDelivr z jawną wersją w URL-u).
