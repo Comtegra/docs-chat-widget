@@ -16,51 +16,63 @@ import { streamDocsChat } from "@comtegra/docs-chat-client";
 import { initialThreadState, reduceThread, threadSelectors } from "@comtegra/docs-chat-client";
 import { normalizePanelMode, normalizeScope } from "./lib/preferences.mjs";
 
-// v2: kształt tur z reducera (poprzedni klucz "cgc-docs-chat" trzymał płaskie wiadomości —
-// migawki sprzed wdrożenia są ignorowane; sessionStorage żyje tylko w karcie)
-export const STORAGE_KEY = "cgc-docs-chat:v2";
-const LEGACY_STORAGE_KEY = "cgc-docs-chat";
+// Klucze sessionStorage per tenant przychodzą z lifecycle'u theme'u (options.storageKeys:
+// { snapshot, clientId }) — ten sam snapshot czyta skrypt pre-hydracji (injectHtmlTags).
 export const REQUEST_TIMEOUT_MS = 30000;
+const STATUS_PROBE_TIMEOUT_MS = 3000;
 
-function loadStoredChatState() {
-  if (typeof window === "undefined") {
+function loadStoredChatState(key) {
+  if (typeof window === "undefined" || !key) {
     return null;
   }
   try {
-    window.sessionStorage.removeItem(LEGACY_STORAGE_KEY);
-    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    const raw = window.sessionStorage.getItem(key);
     return raw ? JSON.parse(raw) : null;
   } catch (error) {
     return null;
   }
 }
 
-function writePersistedChatState(snapshot) {
-  if (typeof window === "undefined") {
+function writePersistedChatState(key, snapshot) {
+  if (typeof window === "undefined" || !key) {
     return;
   }
   try {
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    window.sessionStorage.setItem(key, JSON.stringify(snapshot));
   } catch (error) {
     // storage niedostępny / pełny — stan żyje w React do końca sesji SPA
   }
 }
 
-function clearPersistedChatState() {
-  if (typeof window === "undefined") {
+function clearPersistedChatState(key) {
+  if (typeof window === "undefined" || !key) {
     return;
   }
   try {
-    window.sessionStorage.removeItem(STORAGE_KEY);
+    window.sessionStorage.removeItem(key);
   } catch (error) {
     // nic do zrobienia — następny zapis nadpisze
   }
 }
 
+/** id wdrożenia utrwalone przez skrypt pre-hydracji (parametr URL, np. ?r=…) — atrybucja, nie auth */
+function readClientId(key) {
+  if (typeof window === "undefined" || !key) {
+    return null;
+  }
+  try {
+    return window.sessionStorage.getItem(key) || null;
+  } catch (error) {
+    return null;
+  }
+}
+
 /**
- * @param {{ apiUrl: string, feedbackUrl?: string, locale: string, page: { permalink: string } }} options
+ * @param {{ apiUrl: string, feedbackUrl?: string, statusUrl?: string|null, locale: string, page: { permalink: string }, storageKeys?: { snapshot: string, clientId: string } }} options
  */
-export default function useDocsChat({ apiUrl, feedbackUrl, locale, page }) {
+export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, page, storageKeys }) {
+  const snapshotKey = storageKeys?.snapshot;
+  const clientIdKey = storageKeys?.clientId;
   const [thread, dispatch] = useReducer(reduceThread, initialThreadState);
   // SSR i pierwszy render klienta zawsze z domyślnymi wartościami (brak niezgodności hydratacji);
   // odtworzenie z sessionStorage w efekcie po montażu
@@ -69,7 +81,7 @@ export default function useDocsChat({ apiUrl, feedbackUrl, locale, page }) {
   // tryb panelu synchronicznie z migawki przy remoncie po stronie klienta (docs ↔ /search):
   // useIsBrowser jest false podczas hydratacji (zgodność z SSR), true przy późniejszych montażach
   const isBrowser = useIsBrowser();
-  const [panelMode, setPanelMode] = useState(() => (isBrowser ? normalizePanelMode(loadStoredChatState()?.panelMode) : "collapsed"));
+  const [panelMode, setPanelMode] = useState(() => (isBrowser ? normalizePanelMode(loadStoredChatState(snapshotKey)?.panelMode) : "collapsed"));
   const controllerRef = useRef(null);
   const timeoutRef = useRef(null);
   const restoredRef = useRef(false);
@@ -98,7 +110,7 @@ export default function useDocsChat({ apiUrl, feedbackUrl, locale, page }) {
   useEffect(() => {
     if (restoredRef.current) return;
     restoredRef.current = true;
-    const stored = loadStoredChatState();
+    const stored = loadStoredChatState(snapshotKey);
     if (stored) {
       if (stored.panelMode) setPanelMode(normalizePanelMode(stored.panelMode));
       if (stored.scope) setScope(normalizeScope(stored.scope));
@@ -116,12 +128,12 @@ export default function useDocsChat({ apiUrl, feedbackUrl, locale, page }) {
   // Nigdy przed odtworzeniem (domyślny stan nadpisałby migawkę).
   useEffect(() => {
     if (!hydrated) return;
-    writePersistedChatState({ panelMode, scope, prompt, turns: threadSelectors.persistable(thread) });
+    writePersistedChatState(snapshotKey, { panelMode, scope, prompt, turns: threadSelectors.persistable(thread) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, panelMode, scope, prompt]);
   useEffect(() => {
     if (!hydrated || loading) return;
-    writePersistedChatState({ panelMode, scope, prompt, turns: threadSelectors.persistable(thread) });
+    writePersistedChatState(snapshotKey, { panelMode, scope, prompt, turns: threadSelectors.persistable(thread) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, thread, loading]);
 
@@ -135,7 +147,7 @@ export default function useDocsChat({ apiUrl, feedbackUrl, locale, page }) {
       if (threadSelectors.loading(current)) {
         const stopped = reduceThread(current, { type: "abort", reason: "stopped", at: Date.now() });
         // bieżące wartości przez refy — domknięcie efektu z [] trzymałoby stan z pierwszego renderu
-        writePersistedChatState({
+        writePersistedChatState(snapshotKey, {
           panelMode: panelModeRef.current,
           scope: scopeRef.current,
           prompt: promptRef.current,
@@ -198,9 +210,10 @@ export default function useDocsChat({ apiUrl, feedbackUrl, locale, page }) {
       armTimeout();
 
       try {
+        const client = readClientId(clientIdKey);
         await streamDocsChat({
           apiUrl,
-          body: { prompt: trimmedPrompt, locale, scope: targetScope, page },
+          body: { prompt: trimmedPrompt, locale, scope: targetScope, page, ...(client ? { client } : {}) },
           signal,
           onEvent: emit,
           onActivity: armTimeout,
@@ -219,7 +232,7 @@ export default function useDocsChat({ apiUrl, feedbackUrl, locale, page }) {
         }
       }
     },
-    [apiUrl, locale, page]
+    [apiUrl, locale, page, clientIdKey]
   );
 
   // Feedback (kciuk w górę / w dół) → cgc-web /api/chat/feedback po `traceId` z ramki `done`.
@@ -254,12 +267,30 @@ export default function useDocsChat({ apiUrl, feedbackUrl, locale, page }) {
     }
     dispatch({ type: "clear" });
     setPrompt("");
-    clearPersistedChatState();
+    clearPersistedChatState(snapshotKey);
   }, [stop]);
+
+  // Sonda dostępności: przy pierwszym otwarciu panelu GET /status z krótkim timeoutem.
+  // Sieci z allowlistą (on-prem) tną ruch do API — zamiast wiecznego spinnera użytkownik dostaje
+  // komunikat z adresem do odblokowania. Wynik trzymany per sesja (jedno żądanie).
+  const [backendStatus, setBackendStatus] = useState("unknown");
+  const probedRef = useRef(false);
+  const isPanelOpen = panelMode !== "collapsed";
+  useEffect(() => {
+    if (!statusUrl || !isPanelOpen || probedRef.current) return;
+    probedRef.current = true;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), STATUS_PROBE_TIMEOUT_MS);
+    fetch(statusUrl, { signal: controller.signal })
+      .then((response) => setBackendStatus(response.ok ? "ok" : "unreachable"))
+      .catch(() => setBackendStatus("unreachable"))
+      .finally(() => clearTimeout(timer));
+  }, [statusUrl, isPanelOpen]);
 
   return {
     turns: thread.turns,
     loading,
+    backendStatus,
     prompt,
     setPrompt,
     scope,

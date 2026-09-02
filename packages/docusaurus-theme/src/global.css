@@ -1,0 +1,84 @@
+/* Globalny arkusz theme'u (getClientModules): tokeny AI + reguły poza panelem (slot navbara,
+   dosuwanie treści, druk). Paleta NIE jest sztywna: akcent i powierzchnie dziedziczą z Infima
+   strony-konsumenta (--ifm-*), więc widget wygląda „po ichniemu" bez konfiguracji. */
+@import "./DocsChat/ai-tokens.css";
+
+/* === mapowanie tokenów na motyw strony (nadpisuje stałe z ai-tokens.css) === */
+:root {
+  --ai-accent: var(--ifm-color-primary);
+  --ai-accent-ink: var(--ifm-color-primary-darker, var(--ifm-color-primary));
+  --ai-accent-tint: var(--ifm-color-primary-contrast-background, rgba(0, 0, 0, 0.05));
+  --ai-surface: var(--ifm-background-surface-color, #ffffff);
+  --ai-page: var(--ifm-background-color, #ffffff);
+  --ai-radius-chip: var(--ifm-global-radius, 0);
+  --ai-radius-control: var(--ifm-global-radius, 0);
+  --ai-radius-card: calc(var(--ifm-global-radius, 0) * 1.5);
+  --docs-chat-width: 460px;
+  /* glif na akcencie (Wyślij): jasny tekst na kolorze primary — strona może nadpisać */
+  --docs-chat-on-accent: var(--ifm-color-white, #ffffff);
+}
+html[data-theme="dark"] {
+  --ai-accent-ink: var(--ifm-color-primary-lighter, var(--ifm-color-primary));
+}
+
+/* slot na przycisk w navbarze (custom-docsChat; przycisk renderuje DocsChat portalem) */
+.docs-chat-navbar-slot {
+  display: inline-flex;
+  align-items: center;
+}
+/* navbar.items trafiają też do menu mobilnego — tam slot ma być pusty */
+.navbar-sidebar .docs-chat-navbar-item {
+  display: none;
+}
+@media (max-width: 1099px) {
+  .navbar__items--right .docs-chat-navbar-item {
+    padding: 0;
+  }
+}
+
+/* szuflada odsuwa treść, gdy jest na to miejsce (≥ 1600 px); niżej nakłada się na margines */
+@media (min-width: 1600px) {
+  html[data-docs-chat="expanded"] .main-wrapper {
+    padding-right: var(--docs-chat-width);
+  }
+  html[data-docs-chat="expanded"] .footer {
+    padding-right: calc(var(--ifm-footer-padding-horizontal) + var(--docs-chat-width));
+  }
+  html[data-docs-chat="expanded"] .theme-back-to-top-button {
+    right: calc(1.3rem + var(--docs-chat-width));
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html[data-docs-chat-ready] .main-wrapper,
+    html[data-docs-chat-ready] .footer {
+      transition: padding-right 200ms ease;
+    }
+  }
+}
+/* poniżej progu push przycisk „do góry" motywu koliduje z szufladą — chowamy przy otwartej */
+@media (max-width: 1599px) {
+  html[data-docs-chat="expanded"] .theme-back-to-top-button {
+    display: none;
+  }
+}
+html[data-docs-chat="fullscreen"] .theme-back-to-top-button {
+  display: none;
+}
+
+/* izolacja od globalnych reguł strony (np. `html[data-theme] h1 { color: … }` w custom.css
+   konsumenta) — typografia panelu wraca do tokenów AI */
+#docs-chat-panel h1,
+#docs-chat-panel h2,
+#docs-chat-panel h3,
+#docs-chat-panel h4 {
+  color: var(--ai-ink);
+  font-family: var(--ifm-font-family-base);
+}
+
+/* druk / generowanie PDF ze strony: panel i przycisk nigdy nie trafiają na wydruk */
+@media print {
+  #docs-chat-panel,
+  #docs-chat-selection,
+  .docs-chat-navbar-item {
+    display: none !important;
+  }
+}

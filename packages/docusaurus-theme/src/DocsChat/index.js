@@ -33,15 +33,19 @@ import { turnDurationMs } from "@comtegra/docs-chat-client";
 /**
  * @param {{ permalink: string|null }} props  permalink aktywnego dokumentu (== metadata.permalink); null poza docs
  */
-export default function DocsChat({ permalink }) {
-  const { siteConfig, i18n } = useDocusaurusContext();
+export default function DocsChat({ options, permalink }) {
+  const { i18n } = useDocusaurusContext();
   const locale = (i18n?.currentLocale || "en").toLowerCase();
   // stałe per build (translate() zna locale statycznie) — jedna instancja, żeby React.memo
   // w StreamingAnswer/ThinkingTrace nie dostawał świeżego obiektu co render
-  const copy = useMemo(() => getCopy(), []);
-  const apiUrl = siteConfig.customFields?.docsChatApiUrl;
-  const feedbackUrl = siteConfig.customFields?.docsChatFeedbackUrl;
-  const selectionEnabled = siteConfig.customFields?.docsChatSelectionActions !== false;
+  const copy = useMemo(
+    () => getCopy({ assistantName: options.assistantName, examplePrompts: options.examplePrompts }),
+    [options.assistantName, options.examplePrompts]
+  );
+  const apiUrl = `${options.apiBaseUrl}/api/v1/${options.tenant}/chat`;
+  const feedbackUrl = `${options.apiBaseUrl}/api/v1/${options.tenant}/feedback`;
+  const statusUrl = options.statusProbe ? `${options.apiBaseUrl}/api/v1/${options.tenant}/status` : null;
+  const selectionEnabled = options.selectionActions !== false;
 
   // kontrakt żądania (cgc-web lib/docsChat/request.mjs): scope=page wymaga `page.permalink`
   // (lub `page.source` — klient sprzed 1b); tu tylko permalink. Poza docs (null) zakres „ta strona"
@@ -49,7 +53,7 @@ export default function DocsChat({ permalink }) {
   const pageAvailable = typeof permalink === "string" && permalink.length > 0;
   const page = useMemo(() => ({ permalink: pageAvailable ? permalink : "" }), [pageAvailable, permalink]);
 
-  const chat = useDocsChat({ apiUrl, feedbackUrl, locale, page });
+  const chat = useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, page, storageKeys: options.storageKeys });
   const {
     turns,
     loading,
@@ -65,6 +69,7 @@ export default function DocsChat({ permalink }) {
     clearConversation,
     feedbackByTrace,
     sendFeedback,
+    backendStatus,
   } = chat;
 
   // poza docs zakres „ta strona" jest niedostępny — pochodna, nie nadpisanie preferencji użytkownika
@@ -211,6 +216,11 @@ export default function DocsChat({ permalink }) {
             {/* role="log" + aria-busy: AT czeka z ogłoszeniem do końca strumienia (kontrakt §4.3);
                 etykieta fazy w osobnym role="status" wyżej */}
             <div className={styles.thread} role="log" aria-live="polite" aria-busy={loading} aria-label={copy.title}>
+              {backendStatus === "unreachable" && (
+                <div className={`${styles.message} ${styles.assistantMessage}`} role="alert">
+                  <p>{copy.unreachable.replace("{host}", options.apiBaseUrl)}</p>
+                </div>
+              )}
               {!hasConversation && <EmptyState copy={copy} onAsk={(example) => ask(effectiveScope, example)} />}
 
               {turns.map((entry) => {
