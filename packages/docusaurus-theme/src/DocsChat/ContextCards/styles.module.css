@@ -1,0 +1,100 @@
+/* ContextCards — numerowane karty źródeł ze snippetem (wzorzec BUI „Context Cards").
+   Numer karty = numer cytowania [n] w odpowiedzi; bez paska trafności (score to sygnał
+   wewnętrzny, nie informacja dla czytelnika). Tokeny ai-*, promienie --ai-radius-* (Infima). */
+.sources { margin-top: 0.95rem; }
+
+.label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--ai-ink-3);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* karta wypełnia wysokość wiersza siatki (2-liniowy tytuł nie robi „schodków") */
+.list > li { display: flex; }
+.card {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-radius-card);
+  color: var(--ai-ink);
+  background: var(--ai-surface);
+  text-decoration: none;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+a.card:hover, a.card:focus-visible {
+  border-color: var(--ai-accent);
+  color: var(--ai-ink);
+  background: var(--ai-hover);
+  text-decoration: none;
+  outline: 0;
+}
+.card:focus-visible { border-color: var(--ai-accent); box-shadow: 0 0 0 2px var(--ai-accent-tint); }
+/* karta wskazana chipem cytowania (focus programowy) */
+.card:focus { outline: 0; border-color: var(--ai-accent); }
+
+.number {
+  flex: none;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.3rem;
+  border: 1px solid var(--ai-line-strong);
+  border-radius: var(--ai-radius-chip);
+  color: var(--ai-ink-2);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.body { min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.route {
+  color: var(--ai-ink-3);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.68rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.snippet {
+  margin: 0.1rem 0 0;
+  color: var(--ai-ink-2);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card { animation: global(ai-fade-up) 320ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+  .list li:nth-child(2) .card { animation-delay: 40ms; }
+  .list li:nth-child(3) .card { animation-delay: 80ms; }
+  .list li:nth-child(4) .card { animation-delay: 120ms; }
+  .list li:nth-child(n + 5) .card { animation-delay: 160ms; }
+}

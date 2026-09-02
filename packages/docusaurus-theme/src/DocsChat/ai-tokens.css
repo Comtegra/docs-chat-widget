@@ -1,0 +1,64 @@
+/* ai-tokens v1.1 — źródło prawdy: cgc-web/styles/ai-tokens.css. (v1.1: +--ai-info dla StatusChip E4)
+ * KOPIA 1:1 w cgc-user-docs/src/css/ai-tokens.css — nie edytować kopii, tylko źródło (i skopiować).
+ * Tokeny semantyczne UI AI (Ask CGC w docs, czat cgc-web, konsola admina).
+ * Plan: cgc-web/docs/ai-native-ui-plan.md §4.1 (paleta), §4.1b (motion).
+ *
+ * Kolory jako trójki RGB (--ai-x-rgb) + gotowy kolor (--ai-x), żeby w Tailwindzie
+ * działały modyfikatory /NN (rgb(var(--ai-x-rgb) / <alpha-value>)), a w CSS Modules
+ * dało się użyć var(--ai-x) wprost. Wyjątek: --ai-accent-tint (gotowa wartość).
+ * Ciemny motyw: .dark (cgc-web, next-themes attribute="class") oraz [data-theme='dark'] (docs, Infima).
+ * Promienie: 0 w obu repo (prawo stylu cgc-web; docs od E6 bez nadpisania — jedna rama).
+ * Kontrast (WCAG AA) policzony w planie §4.1; nie zmieniać wartości bez przeliczenia.
+ */
+:root {
+  --ai-page-rgb: 255 255 255;           --ai-page: rgb(var(--ai-page-rgb));               /* #ffffff */
+  --ai-surface-rgb: 255 255 255;        --ai-surface: rgb(var(--ai-surface-rgb));         /* #ffffff */
+  --ai-inset-rgb: 244 244 244;          --ai-inset: rgb(var(--ai-inset-rgb));             /* #f4f4f4 */
+  --ai-hover-rgb: 236 236 236;          --ai-hover: rgb(var(--ai-hover-rgb));             /* #ececec */
+  --ai-ink-rgb: 27 27 29;               --ai-ink: rgb(var(--ai-ink-rgb));                 /* #1b1b1d */
+  --ai-ink-2-rgb: 95 97 102;            --ai-ink-2: rgb(var(--ai-ink-2-rgb));             /* #5f6166 */
+  --ai-ink-3-rgb: 111 114 119;          --ai-ink-3: rgb(var(--ai-ink-3-rgb));             /* #6f7277 */
+  --ai-line-rgb: 227 228 230;           --ai-line: rgb(var(--ai-line-rgb));               /* #e3e4e6 */
+  --ai-line-strong-rgb: 207 209 212;    --ai-line-strong: rgb(var(--ai-line-strong-rgb)); /* #cfd1d4 */
+  --ai-accent-rgb: 235 123 22;          --ai-accent: rgb(var(--ai-accent-rgb));           /* #eb7b16 */
+  --ai-accent-ink-rgb: 178 86 8;        --ai-accent-ink: rgb(var(--ai-accent-ink-rgb));   /* #b25608 */
+  --ai-ok-rgb: 21 128 61;               --ai-ok: rgb(var(--ai-ok-rgb));                   /* #15803d */
+  --ai-warn-rgb: 180 83 9;              --ai-warn: rgb(var(--ai-warn-rgb));               /* #b45309 */
+  --ai-danger-rgb: 201 49 54;           --ai-danger: rgb(var(--ai-danger-rgb));           /* #c93136 */
+  --ai-info-rgb: 3 105 161;             --ai-info: rgb(var(--ai-info-rgb));               /* #0369a1 — 5,9:1 na białym */
+  --ai-code-bg-rgb: 247 247 247;        --ai-code-bg: rgb(var(--ai-code-bg-rgb));         /* #f7f7f7 */
+  --ai-accent-tint: #fdf0e4;
+
+  --ai-radius-chip: 0;
+  --ai-radius-control: 0;
+  --ai-radius-card: 0;
+}
+
+.dark,
+[data-theme='dark'] {
+  --ai-page-rgb: 27 27 29;              --ai-page: rgb(var(--ai-page-rgb));               /* #1b1b1d */
+  --ai-surface-rgb: 35 35 38;           --ai-surface: rgb(var(--ai-surface-rgb));         /* #232326 */
+  --ai-inset-rgb: 32 32 35;             --ai-inset: rgb(var(--ai-inset-rgb));             /* #202023 */
+  --ai-hover-rgb: 44 44 48;             --ai-hover: rgb(var(--ai-hover-rgb));             /* #2c2c30 */
+  --ai-ink-rgb: 242 242 242;            --ai-ink: rgb(var(--ai-ink-rgb));                 /* #f2f2f2 */
+  --ai-ink-2-rgb: 168 170 174;          --ai-ink-2: rgb(var(--ai-ink-2-rgb));             /* #a8aaae */
+  --ai-ink-3-rgb: 138 141 146;          --ai-ink-3: rgb(var(--ai-ink-3-rgb));             /* #8a8d92 */
+  --ai-line-rgb: 47 48 51;              --ai-line: rgb(var(--ai-line-rgb));               /* #2f3033 */
+  --ai-line-strong-rgb: 61 62 66;       --ai-line-strong: rgb(var(--ai-line-strong-rgb)); /* #3d3e42 */
+  --ai-accent-rgb: 235 123 22;          --ai-accent: rgb(var(--ai-accent-rgb));           /* #eb7b16 */
+  --ai-accent-ink-rgb: 242 140 46;      --ai-accent-ink: rgb(var(--ai-accent-ink-rgb));   /* #f28c2e */
+  --ai-ok-rgb: 61 187 114;              --ai-ok: rgb(var(--ai-ok-rgb));                   /* #3dbb72 */
+  --ai-warn-rgb: 245 165 36;            --ai-warn: rgb(var(--ai-warn-rgb));               /* #f5a524 */
+  --ai-danger-rgb: 238 92 97;           --ai-danger: rgb(var(--ai-danger-rgb));           /* #ee5c61 */
+  --ai-info-rgb: 56 189 248;            --ai-info: rgb(var(--ai-info-rgb));               /* #38bdf8 */
+  --ai-code-bg-rgb: 22 22 24;           --ai-code-bg: rgb(var(--ai-code-bg-rgb));         /* #161618 */
+  --ai-accent-tint: rgba(235, 123, 22, 0.14);
+}
+
+/* motion — jedyne keyframes wzorców AI (użycie: cgc-web przez motion-safe:animate-*,
+ * docs w CSS Modules pod @media (prefers-reduced-motion: no-preference)).
+ * Czasy/easing w tailwind.config.js (theme.extend.animation) i w CSS Modules docs. */
+@keyframes ai-fade-up   { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes ai-fade-in   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ai-stream-in { from { opacity: 0; filter: blur(3px); } to { opacity: 1; filter: none; } }
+@keyframes ai-shimmer   { from { background-position: 150%; } to { background-position: -50%; } }

@@ -1,0 +1,306 @@
+/* Ask CGC — rama panelu w idiomie cgc-web (E6, plan §7b): kwadraty (promienie z tokenów = 0),
+   linie 1 px z tokenów ai-*, jedna krawędź akcentu, zero cieni i pigułek. Panel = szuflada od
+   prawej krawędzi na pełną wysokość (pod navbarem); < 997 px = pełny ekran; pełny ekran na życzenie.
+   Style wzorców (ślad, odpowiedź, karty, composer, zaznaczenie) żyją w modułach komponentów. */
+
+/* --- wejście: przycisk w navbarze (portal do .docs-chat-navbar-slot) + launcher mobile ------------ */
+/* bez marginesów: wrapper .navbar__item ma własne 12 px; poniżej 1440 px bez <kbd>, poniżej 1280 px
+   tylko ikona (aria-label niesie nazwę) — prawa grupa navbaru musi zmieścić się z lewą przy 997 px */
+.navbarButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 2.25rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--ai-line-strong);
+  border-left: 3px solid var(--ai-accent);
+  border-radius: var(--ai-radius-control);
+  color: var(--ai-ink);
+  background: var(--ai-surface);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+.navbarButton:hover { border-color: var(--ai-accent); background: var(--ai-hover); }
+.navbarButton:focus-visible { outline: 2px solid var(--ai-accent); outline-offset: 2px; }
+.navbarButton[aria-expanded="true"] { background: var(--ai-accent-tint); }
+.navbarIcon { display: inline-flex; color: var(--ai-accent); }
+.navbarKbd { display: inline-flex; gap: 0.15rem; margin-left: 0.15rem; }
+.navbarKbd kbd {
+  padding: 0 0.3rem;
+  border: 1px solid var(--ai-line);
+  background: var(--ai-hover);
+  color: var(--ai-ink-2);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.launcher {
+  display: none; /* tylko mobile — na desktopie wejściem jest przycisk w navbarze */
+  position: fixed;
+  z-index: 120;
+  right: 1.3rem;
+  /* nad przyciskiem „do góry" motywu (right/bottom 1.3rem, 3 rem) — nie zasłaniają się */
+  bottom: calc(1.3rem + 3rem + 0.6rem);
+  height: 3rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1rem;
+  border: 1px solid var(--ai-line-strong);
+  border-top: 2px solid var(--ai-accent);
+  border-radius: var(--ai-radius-control);
+  color: var(--ai-ink);
+  background: var(--ai-surface);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.launcher:focus-visible { outline: 2px solid var(--ai-accent); outline-offset: 2px; }
+.launcherIcon { display: inline-flex; color: var(--ai-accent); }
+
+/* --- szuflada -------------------------------------------------------------------------------- */
+.panel {
+  position: fixed;
+  z-index: 130;
+  top: var(--ifm-navbar-height);
+  right: 0;
+  bottom: 0;
+  width: min(var(--docs-chat-width), 100vw);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border-left: 1px solid var(--ai-line-strong);
+  border-top: 2px solid var(--ai-accent);
+  color: var(--ai-ink);
+  background: var(--ai-surface);
+}
+.panel:focus { outline: 0; }
+.panel.fullscreen {
+  inset: 0;
+  z-index: calc(var(--ifm-z-index-fixed, 200) + 1);
+  width: 100vw;
+  height: 100dvh;
+  border-left: 0;
+  /* odpowiedź większa w trybie pełnoekranowym (StreamingAnswer czyta zmienną) */
+  --docs-chat-answer-size: 1rem;
+}
+/* pełny ekran + szerokie okno: jedna wyśrodkowana kolumna rozmowy jak w /chat cgc-web */
+.panel.fullscreen .thread { max-width: 46rem; }
+
+/* --- nagłówek: tytuł + akcje; zakres jako segment + „Nowy czat" ------------------------------------ */
+.panelHeader {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem 0.7rem;
+  border-bottom: 1px solid var(--ai-line);
+  background: var(--ai-surface);
+}
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.titleGroup { min-width: 0; }
+.title {
+  margin: 0;
+  overflow: hidden;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.subtitle {
+  margin: 0.1rem 0 0;
+  color: var(--ai-ink-3);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+.headerActions { display: inline-flex; align-items: center; gap: 0.25rem; flex: none; }
+.iconButton {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--ai-radius-control);
+  color: var(--ai-ink-2);
+  background: transparent;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+.iconButton:hover { color: var(--ai-ink); background: var(--ai-hover); }
+.iconButton:focus-visible { outline: 2px solid var(--ai-accent); outline-offset: 1px; }
+.clearButton {
+  min-height: 2rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--ai-line-strong);
+  border-radius: var(--ai-radius-control);
+  color: var(--ai-ink);
+  background: var(--ai-surface);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+.clearButton:hover:not(:disabled) { border-color: var(--ai-accent); background: var(--ai-hover); }
+.clearButton:focus-visible { outline: 2px solid var(--ai-accent); outline-offset: 1px; }
+.clearButton:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* segment zakresu: role=radiogroup z dwoma role=radio */
+.scopeSwitch {
+  display: inline-flex;
+  min-width: 0;
+  border: 1px solid var(--ai-line-strong);
+  border-radius: var(--ai-radius-control);
+  background: var(--ai-surface);
+  overflow: hidden;
+}
+.scopeOption {
+  min-height: 2rem;
+  padding: 0 0.7rem;
+  border: 0;
+  border-right: 1px solid var(--ai-line-strong);
+  color: var(--ai-ink-2);
+  background: transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+.scopeOption:last-child { border-right: 0; }
+.scopeOption:hover:not([aria-disabled="true"]) { color: var(--ai-ink); background: var(--ai-hover); }
+.scopeOption[aria-checked="true"] { color: var(--ai-accent-ink); background: var(--ai-accent-tint); }
+.scopeOption[aria-disabled="true"] { color: var(--ai-ink-3); cursor: not-allowed; opacity: 0.6; }
+.scopeOption:focus-visible { outline: 2px solid var(--ai-accent); outline-offset: -2px; }
+
+/* --- wątek ------------------------------------------------------------------------------------ */
+.chatBody {
+  min-height: 0;
+  padding: 1rem 1rem 1.1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  background: var(--ai-surface);
+}
+.panel.fullscreen .chatBody { padding: clamp(1.5rem, 4vh, 2.75rem) 1.25rem; }
+.thread {
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+.message { min-width: 0; }
+.message p:last-child { margin-bottom: 0; }
+.userMessage {
+  align-self: flex-end;
+  max-width: min(88%, 34rem);
+  padding: 0.55rem 0.8rem;
+  border-radius: var(--ai-radius-card);
+  color: var(--ai-ink);
+  background: var(--ai-accent-tint);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.userMessage p { margin: 0; white-space: pre-wrap; }
+.assistantMessage { align-self: stretch; }
+
+/* --- pusty stan ------------------------------------------------------------------------------- */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 0 0;
+}
+.emptyIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 0.25rem;
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-radius-card);
+  color: var(--ai-accent);
+  background: var(--ai-accent-tint);
+}
+.emptyTitle { margin: 0; font-size: 1.05rem; font-weight: 800; line-height: 1.25; }
+.emptyHint { margin: 0; max-width: 32rem; color: var(--ai-ink-2); font-size: 0.9rem; }
+.exampleList { display: flex; flex-direction: column; gap: 0.4rem; width: 100%; margin-top: 0.75rem; }
+.exampleChip {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-radius-control);
+  color: var(--ai-ink);
+  background: var(--ai-surface);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+.exampleChip:hover, .exampleChip:focus-visible { border-color: var(--ai-accent); background: var(--ai-hover); outline: 0; }
+.exampleChip:focus-visible { outline: 2px solid var(--ai-accent); outline-offset: 1px; }
+
+/* tekst tylko dla czytników (role="status" panelu) */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* CodeBlock Docusaurusa w odpowiedziach — kwadraty w zasięgu panelu */
+.panel { --ifm-code-border-radius: 0; --ifm-pre-border-radius: 0; --ifm-global-radius: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .navbarButton, .launcher, .clearButton, .iconButton, .scopeOption, .exampleChip { transition: none; }
+}
+
+@media (max-width: 1439px) {
+  .navbarKbd { display: none; }
+}
+@media (max-width: 1279px) {
+  .navbarLabel { display: none; }
+  .navbarButton { padding: 0 0.55rem; }
+}
+
+/* mobile: navbar chowa elementy do menu → launcher w rogu; panel = pełny ekran */
+@media (max-width: 996px) {
+  .launcher { display: inline-flex; }
+  /* pod navbarem (navbar ma wyższy z-index — panel nie może pod niego wjechać), na całą szerokość */
+  .panel {
+    top: var(--ifm-navbar-height);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    border-left: 0;
+  }
+  .panel.fullscreen { inset: 0; height: 100dvh; }
+  .subtitle { display: none; }
+}

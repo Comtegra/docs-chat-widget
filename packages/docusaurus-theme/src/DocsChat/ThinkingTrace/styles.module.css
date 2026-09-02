@@ -1,0 +1,155 @@
+/* ThinkingTrace — ślad kroków / rozumowania (wzorzec BUI „Thinking", tokeny ai-* z ai-tokens.css).
+   Rozwijanie przez grid-template-rows 0fr→1fr; motion tylko poza prefers-reduced-motion.
+   UWAGA: CSS Modules lokalizują nazwy w `animation` — keyframes ai-* z ai-tokens.css wołamy przez
+   `global(ai-…)` (przegląd E3: bez tego animacje były martwe w buildzie). */
+.trace {
+  font-size: 0.85rem;
+  color: var(--ai-ink-2);
+  margin: 0 0 0.35rem;
+}
+
+.header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-left: -0.35rem;
+  padding: 0.2rem 0.4rem;
+  border: 0;
+  border-radius: var(--ai-radius-control);
+  background: none;
+  color: var(--ai-ink-2);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+.header:hover { background: var(--ai-hover); }
+.header:focus-visible { outline: 2px solid var(--ai-accent); outline-offset: 1px; }
+
+.spark {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  background: var(--ai-accent);
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+}
+.spark.dim { background: var(--ai-ink-3); }
+
+.label { white-space: nowrap; }
+.label.shimmer {
+  background-image: linear-gradient(90deg, var(--ai-ink-3) 35%, var(--ai-ink) 50%, var(--ai-ink-3) 65%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.chevron {
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid var(--ai-ink-3);
+  border-bottom: 1.5px solid var(--ai-ink-3);
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 300ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.header[aria-expanded="true"] .chevron { transform: rotate(225deg) translateY(-1px); }
+
+.body {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 400ms cubic-bezier(0.23, 1, 0.32, 1), opacity 400ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.body.open { grid-template-rows: 1fr; opacity: 1; }
+.body > div { overflow: hidden; }
+
+.steps {
+  list-style: none;
+  margin: 0.25rem 0 0 0.4rem;
+  padding: 0.15rem 0 0.15rem 0.85rem;
+  border-left: 1px solid var(--ai-line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.6rem;
+  padding: 0 0.35rem;
+  font-size: 0.82rem;
+}
+.marker {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  border: 1.5px solid var(--ai-line-strong);
+  position: relative;
+}
+.step.running .marker { border-top-color: var(--ai-accent); }
+.step.done .marker { border-color: var(--ai-ink-3); }
+/* glify pozycjonowane od środka (50%/50% + translate), nie od lewego górnego rogu — inaczej
+   ptaszek/krzyżyk siedzi lekko w prawo i w dół (przegląd wizualny po wdrożeniu) */
+.step.done .marker::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 6px;
+  border-right: 1.5px solid var(--ai-ink-3);
+  border-bottom: 1.5px solid var(--ai-ink-3);
+  transform: translate(-50%, -62%) rotate(45deg);
+}
+.step.failed .marker { border-color: var(--ai-danger); }
+.step.failed .marker::after,
+.step.failed .marker::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.5px;
+  height: 8px;
+  background: var(--ai-danger);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.step.failed .marker::before { transform: translate(-50%, -50%) rotate(-45deg); }
+.stepLabel { font-weight: 600; color: var(--ai-ink); }
+.step.failed .stepLabel { color: var(--ai-danger); }
+.stepMeta {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  color: var(--ai-ink-3);
+}
+
+.reasoningTitle {
+  margin: 0.5rem 0 0.15rem 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ai-ink-3);
+}
+.reasoning {
+  margin: 0 0 0.25rem 0.85rem;
+  padding: 0.5rem 0.65rem;
+  max-height: 15rem;
+  overflow: auto;
+  border-left: 2px solid var(--ai-line);
+  color: var(--ai-ink-2);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .label.shimmer { animation: global(ai-shimmer) 1.4s linear infinite; }
+  .step { animation: global(ai-fade-up) 320ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+  .step.running .marker { animation: docs-chat-spin 800ms linear infinite; }
+  @keyframes docs-chat-spin { to { transform: rotate(1turn); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .body, .chevron { transition: none; }
+}

@@ -1,0 +1,238 @@
+/* StreamingAnswer — odpowiedź asystenta (wzorzec BUI „Streaming Text": karetka ::after,
+   chipy cytowań, akcje). Typografia markdown przeniesiona ze styles.module.css panelu i
+   przepięta na tokeny ai-* (ai-tokens.css); promienie = --ai-radius-* (docs: Infima). */
+.answer {
+  margin: 0;
+  color: var(--ai-ink);
+  font-size: var(--docs-chat-answer-size, 0.95rem);
+  line-height: 1.62;
+}
+
+.answer p { margin: 0 0 0.75rem; }
+.answer p:last-child,
+.answer ul:last-child,
+.answer ol:last-child { margin-bottom: 0; }
+
+/* karetka strumienia — na ostatnim bloku TEKSTOWYM (po tabeli/kodzie/liście nie ma sensu) */
+.streaming > p:last-child::after,
+.streaming > h1:last-child::after,
+.streaming > h2:last-child::after,
+.streaming > h3:last-child::after,
+.streaming > h4:last-child::after,
+.streaming > blockquote:last-child > p:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--ai-accent);
+}
+/* kropki oczekiwania na pierwszy token */
+.dots { display: inline-flex; align-items: center; gap: 0.22rem; color: var(--ai-ink-3); }
+.dots span { width: 0.32rem; height: 0.32rem; border-radius: var(--ai-radius-chip); background: currentcolor; opacity: 0.7; }
+@media (prefers-reduced-motion: no-preference) {
+  .streaming > p:last-child::after,
+  .streaming > h1:last-child::after,
+  .streaming > h2:last-child::after,
+  .streaming > h3:last-child::after,
+  .streaming > h4:last-child::after,
+  .streaming > blockquote:last-child > p:last-child::after { animation: docs-chat-caret 1s steps(2, start) infinite; }
+  .dots span { animation: docs-chat-dot 860ms ease-in-out infinite; }
+  .dots span:nth-child(2) { animation-delay: 120ms; }
+  .dots span:nth-child(3) { animation-delay: 240ms; }
+  @keyframes docs-chat-caret { to { visibility: hidden; } }
+  @keyframes docs-chat-dot { 0%, 80%, 100% { opacity: 0.45; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-0.2rem); } }
+}
+
+/* markdown modelu emituje prawdziwe nagłówki — skalujemy je do panelu */
+.answer h1, .answer h2, .answer h3, .answer h4, .answer h5, .answer h6 {
+  margin: 1.35rem 0 0.55rem;
+  color: var(--ai-ink);
+  font-weight: 800;
+  line-height: 1.25;
+}
+.answer > :first-child { margin-top: 0; }
+.answer h1 { font-size: 1.22rem; }
+.answer h2 {
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--ai-line);
+  font-size: 1.08rem;
+}
+.answer h3 { font-size: 1rem; }
+.answer h4, .answer h5, .answer h6 { font-size: 0.94rem; font-weight: 700; }
+.answer strong { color: var(--ai-ink); font-weight: 700; }
+
+.answer a {
+  color: var(--ai-accent-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.answer a:hover { text-decoration: underline; }
+
+.answer blockquote {
+  margin: 0.6rem 0 0.85rem;
+  padding: 0.35rem 0 0.35rem 0.9rem;
+  border-left: 3px solid var(--ai-line-strong);
+  color: var(--ai-ink-2);
+}
+.answer blockquote p:last-child { margin-bottom: 0; }
+.answer hr { height: 1px; margin: 1.1rem 0; border: 0; background: var(--ai-line); }
+.answer img { max-width: 100%; height: auto; border-radius: var(--ai-radius-card); }
+
+/* tylko inline code — bloki renderuje @theme/CodeBlock własnymi stylami (nie nadpisujemy) */
+.answer :not(pre) > code {
+  padding: 0.08rem 0.32rem;
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-radius-control);
+  background: var(--ai-hover);
+  font-size: 0.88em;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.answer ul, .answer ol { margin: 0.35rem 0 0.75rem; padding-left: 1.35rem; }
+.answer li + li { margin-top: 0.3rem; }
+.answer li > ul, .answer li > ol { margin: 0.3rem 0 0.2rem; }
+
+/* tabele GFM: cienkie linie, wersalikowy nagłówek */
+.tableScroll { margin: 0.6rem 0 0.85rem; overflow-x: auto; }
+.answer table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.answer th, .answer td {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--ai-line);
+  text-align: left;
+  vertical-align: top;
+}
+.answer th {
+  background: var(--ai-accent-tint);
+  color: var(--ai-ink);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* blok kodu: @theme/CodeBlock (Prism, kopiuj, zawijanie) w karcie z etykietą „propozycja startowa" */
+.codeCard { margin: 0.5rem 0 0.85rem; }
+.codeCard > div { margin-bottom: 0; }
+/* przyciski bloku (Kopiuj, Zawijaj) widoczne w spoczynku — w wąskim panelu (i na dotyku, gdzie nie
+   ma hover) mają być odkrywalne jak pasek bloku w cgc-web; motyw pokazuje je tylko po najechaniu.
+   Selektory z klas globalnych motywu (theme-code-block, clean-btn), nie z hashowanych modułów. */
+.answer .codeCard :global(.theme-code-block) :global(button.clean-btn) { opacity: 0.6; } /* > (0,3,1) reguły hover motywu */
+.codeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.3rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-radius-chip);
+  color: var(--ai-ink-2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.codeBadge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ai-accent);
+}
+
+/* chip cytowania [n] → karta źródła n tej tury */
+.answer a.cite {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  margin: 0 0.1rem;
+  padding: 0 0.3rem;
+  border: 1px solid var(--ai-line-strong);
+  border-radius: var(--ai-radius-chip);
+  color: var(--ai-ink-2);
+  background: var(--ai-hover);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: 0.15em;
+  text-decoration: none;
+  transition: border-color 140ms ease, color 140ms ease, background-color 140ms ease;
+}
+.answer a.cite:hover, .answer a.cite:focus-visible {
+  border-color: var(--ai-accent);
+  color: var(--ai-accent-ink);
+  background: var(--ai-accent-tint);
+  text-decoration: none;
+}
+.answer a.cite:focus-visible { outline: 2px solid var(--ai-accent); outline-offset: 1px; }
+
+.error {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.4rem;
+  color: var(--ai-danger);
+}
+.error p { margin: 0; }
+.error button {
+  min-height: 2rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--ai-accent);
+  border-radius: var(--ai-radius-chip);
+  color: var(--ai-accent-ink);
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.stoppedTag {
+  display: inline-block;
+  margin-top: 0.4rem;
+  color: var(--ai-ink-3);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* akcje pod odpowiedzią: kopiuj / zapytaj ponownie / kciuki — widoczne po zakończeniu */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 0.55rem 0 0 -0.35rem;
+}
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 1.75rem;
+  padding: 0 0.45rem;
+  border: 0;
+  border-radius: var(--ai-radius-control);
+  color: var(--ai-ink-3);
+  background: none;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+.actionButton:not([aria-disabled="true"]):hover { color: var(--ai-ink); background: var(--ai-hover); }
+.actionButton:focus-visible { color: var(--ai-ink); outline: 2px solid var(--ai-accent); outline-offset: 1px; }
+.actionButton[aria-disabled="true"] { cursor: default; opacity: 0.55; }
+.actionButton[aria-pressed="true"] { color: var(--ai-accent-ink); background: var(--ai-accent-tint); }
+.actionButton svg { width: 14px; height: 14px; }
+.actionsSpacer { flex: 1 1 auto; }
+.feedbackNote { color: var(--ai-ink-3); font-size: 0.75rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .actions { animation: global(ai-fade-in) 240ms ease both; }
+}
