@@ -22,6 +22,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - run: npm run build:types --workspace packages/client
 
   gitleaks:
     runs-on: ubuntu-latest
