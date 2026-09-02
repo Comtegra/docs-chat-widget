@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Comtegra/docs-chat-widget/schemas/chat-request.schema.json",
+  "title": "DocsChatRequest",
+  "description": "Body żądania POST /api/v1/{tenant}/chat",
+  "type": "object",
+  "required": ["prompt"],
+  "additionalProperties": true,
+  "properties": {
+    "prompt": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "locale": { "type": "string", "pattern": "^[a-z]{2}$", "description": "domyślnie defaultLocale tenanta" },
+    "scope": { "enum": ["page", "all"], "description": "page wymaga page.permalink" },
+    "client": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[\\x21-\\x7e]+$", "description": "nieprzezroczysty id wdrożenia (atrybucja, nie autoryzacja)" },
+    "page": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "permalink": { "type": "string", "maxLength": 512, "pattern": "^/" },
+        "title": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@comtegra/docs-chat-client",
+  "version": "0.1.0",
+  "description": "Streaming client and shared SSE contract for the docs-chat assistant API (framework-agnostic)",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Comtegra/docs-chat-widget.git",
+    "directory": "packages/client"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./schemas/*": "./schemas/*"
+  },
+  "files": [
+    "src",
+    "schemas",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.mjs\""
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0"
+  }
+}

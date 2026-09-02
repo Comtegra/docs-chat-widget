@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Comtegra/docs-chat-widget/schemas/status-response.schema.json",
+  "title": "TenantStatusResponse",
+  "description": "Odpowiedź GET /api/v1/{tenant}/status (sonda widgetu / allowlisty on-prem)",
+  "type": "object",
+  "required": ["tenant", "name", "model", "locales", "observability", "index"],
+  "properties": {
+    "tenant": { "type": "string" },
+    "name": { "type": "string" },
+    "model": { "type": "string" },
+    "locales": { "type": "array", "items": { "type": "string" } },
+    "observability": { "type": "boolean" },
+    "index": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["locale", "collection", "importId", "commitSha", "activatedAt", "documents"],
+        "properties": {
+          "locale": { "type": "string" },
+          "collection": { "type": "string" },
+          "importId": { "type": ["string", "null"] },
+          "commitSha": { "type": ["string", "null"] },
+          "activatedAt": { "type": ["string", "null"] },
+          "documents": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Comtegra/docs-chat-widget/schemas/import-chunk.schema.json",
+  "title": "ImportChunk",
+  "description": "Jeden dokument/chunk partii POST /api/v1/{tenant}/index/imports/{id}/chunks",
+  "type": "object",
+  "required": ["title", "text"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "text": { "type": "string", "minLength": 1 },
+    "file_path": { "type": ["string", "null"] },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "locale": { "type": "string" },
+        "route": { "type": "string", "description": "ścieżka strony z baseUrl — dopasowanie zakresu „ta strona”" },
+        "anchor": { "type": "string" },
+        "kind": { "type": "string" },
+        "category": { "type": "array", "items": { "type": "string" } },
+        "sourceTitle": { "type": "string" },
+        "chunk_index": { "type": "integer", "minimum": 0 },
+        "chunk_count": { "type": "integer", "minimum": 1 },
+        "chunked": { "type": "boolean" }
+      }
+    }
+  }
+}
