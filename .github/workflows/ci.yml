@@ -80,3 +80,5 @@ jobs:
         run: |
           grep -q "docs-chat:ezd:v2" fixtures/site/build/index.html
           grep -q "docs-chat-navbar-item" fixtures/site/build/index.html
+          # panel w SSG HTML = DocsChat naprawdę zamontowany przez wrap Root (nie tylko lifecycle)
+          grep -q "docs-chat-panel" fixtures/site/build/index.html

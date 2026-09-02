@@ -11,6 +11,6 @@
     "target": "es2020",
     "strict": true,
     "skipLibCheck": true,
-    "lib": ["es2021", "dom", "dom.iterable"]
+    "lib": ["es2019", "dom", "dom.iterable"]
   }
 }

@@ -22,7 +22,8 @@ import DocsChat from "../../DocsChat";
 
 // useActiveDocContext wymaga ISTNIEJĄCEJ instancji docs — strona bez docs (albo z docs pod innym
 // id niż "default") nie może wywalać widgetu, więc id bierzemy z useAllDocsData(); bez docs
-// w ogóle nie montujemy hooka (permalink=null → działa zakres „Cała dokumentacja")
+// w ogóle nie montujemy hooka (permalink=null → działa zakres „Cała dokumentacja").
+// Wiele instancji docs bez id "default": bierzemy pierwszą (deterministycznie wg rejestracji)
 function DocsChatMount() {
   const options = usePluginData("docusaurus-theme-docs-chat");
   const allDocsData = useAllDocsData();

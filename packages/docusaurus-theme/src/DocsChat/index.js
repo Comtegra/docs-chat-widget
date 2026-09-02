@@ -1,8 +1,8 @@
 // Ask CGC — szuflada czatu nad dokumentacją (E6, plan cgc-web/docs/ai-native-ui-plan.md §7b).
 // Kompozycja: stan i transport w useDocsChat.js, logika czysta w lib/*.mjs, prezentacja w
 // NavbarEntry / PanelHeader / EmptyState / ThinkingTrace / StreamingAnswer / ContextCards /
-// PromptBar / SelectionActions. Montowany RAZ przez wrap src/theme/Layout na KAŻDEJ trasie —
-// żyje przez całą nawigację; `permalink` aktywnego doca przychodzi propsem (null poza docs → zakres
+// PromptBar / SelectionActions. Montowany RAZ przez wrap src/theme/Root (Root nie remontuje
+// się przy nawigacji) — żyje przez całą sesję; `permalink` aktywnego doca przychodzi propsem (null poza docs → zakres
 // wymuszony „Cała dokumentacja"). Wejście: przycisk w navbarze (portal do slotu z konfiguracji) +
 // skrót Ctrl+/ + launcher w rogu na mobile.
 //

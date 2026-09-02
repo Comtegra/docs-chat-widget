@@ -1,8 +1,8 @@
 // Skutki uboczne trybu panelu w DOM poza drzewem React (E6):
 //  - `html[data-docs-chat]` = tryb (custom.css odsuwa treść docs, gdy jest miejsce) + `data-docs-chat-ready`
 //    (przejście padding-right dopiero po montażu; skrypt z headTags ustawia tryb przed hydratacją).
-//    Bez czyszczenia przy odmontowaniu — między trasami docs ↔ nie-docs Layout remontuje DocsChat,
-//    a treść nie może „skoczyć" na jedną klatkę.
+//    Bez czyszczenia przy odmontowaniu — wrap Root nie remontuje się przy nawigacji, a jedyny
+//    realny unmount to crash panelu (atrybuty zdejmuje wtedy DocsChatCrashed w theme/Root).
 //  - pełny ekran: reszta dokumentu (#__docusaurus) `inert` — panel jest portalem poza nim.
 import { useEffect } from "react";
 
