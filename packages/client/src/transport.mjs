@@ -35,6 +35,7 @@ export async function streamDocsChat({ apiUrl, body, signal, onEvent, onActivity
   let sawDone = false;
   let sawError = false;
 
+  /** @param {Record<string, any>} event sparsowana ramka z parsera SSE */
   const handleFrame = (event) => {
     switch (event.type) {
       case "sources":

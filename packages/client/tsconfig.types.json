@@ -1,0 +1,16 @@
+{
+  "include": ["src/**/*.mjs"],
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "types",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "es2020",
+    "strict": true,
+    "skipLibCheck": true,
+    "lib": ["es2021", "dom", "dom.iterable"]
+  }
+}
