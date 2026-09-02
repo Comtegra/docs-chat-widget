@@ -26,11 +26,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      # trusted publishing wymaga npm >= 11.5 (node 22 bundluje starszy)
-      - run: npm install -g npm@latest
+      # trusted publishing wymaga npm >= 11.5 (node 22 bundluje starszy); przypięte do majora,
+      # żeby świeży major npm nie zepsuł wydania w losowy wtorek
+      - run: npm install -g npm@^11.5
       - name: Version PR / publish
         uses: changesets/action@v1
         with:
+          # własny krok version: sam `changeset version` nie dotyka package-lock.json —
+          # bez tego lockfile dryfuje i wjeżdża śmieciem do pierwszego cudzego PR-a po wydaniu
+          version: npx changeset version && npm install --package-lock-only
           publish: npx changeset publish
           createGithubReleases: true
         env:
