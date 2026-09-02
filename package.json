@@ -1,0 +1,21 @@
+{
+  "name": "docs-chat-widget",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Docs assistant widget for Docusaurus sites and a framework-agnostic streaming client",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Comtegra/docs-chat-widget.git"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}
