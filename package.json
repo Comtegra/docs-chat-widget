@@ -17,7 +17,8 @@
   ],
   "scripts": {
     "test": "npm run test --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "release:version": "changeset version && npm install --package-lock-only"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0"

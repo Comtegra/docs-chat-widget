@@ -33,8 +33,10 @@ jobs:
         uses: changesets/action@v1
         with:
           # własny krok version: sam `changeset version` nie dotyka package-lock.json —
-          # bez tego lockfile dryfuje i wjeżdża śmieciem do pierwszego cudzego PR-a po wydaniu
-          version: npx changeset version && npm install --package-lock-only
+          # bez tego lockfile dryfuje i wjeżdża śmieciem do pierwszego cudzego PR-a po wydaniu.
+          # Koniecznie przez `npm run` — akcja NIE przepuszcza tego stringa przez shell
+          # (inline `&&` poszedłby jako literalny argument do changeset = cichy no-op)
+          version: npm run release:version
           publish: npx changeset publish
           createGithubReleases: true
         env:

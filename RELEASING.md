@@ -22,12 +22,15 @@ w rejestrze — pierwszej publikacji workflow NIE wykona (401). Robi ją ręczni
 maintainer z dostępem do orga, z czystego checkoutu `main`:
 
 ```bash
+npm login                       # konto z dostępem do orga; OTP przy 2FA
 npm ci && npm test
-npm publish --workspace packages/client --access public
-npm publish --workspace packages/docusaurus-theme --access public
+npm publish --workspace packages/client --access public --provenance=false
+npm publish --workspace packages/docusaurus-theme --access public --provenance=false
 ```
 
-(`prepublishOnly` buduje IIFE i typy). Zaraz po tym skonfiguruj Trusted Publisher
+(`prepublishOnly` buduje IIFE i typy). `--provenance=false` jest konieczne: paczki mają
+`publishConfig.provenance: true`, a atestacja provenance działa wyłącznie w CI z OIDC
+(GitHub Actions/GitLab) — lokalny publish bez tej flagi kończy się błędem sigstore. Zaraz po tym skonfiguruj Trusted Publisher
 (punkt 2 wyżej) — kolejne wydania idą już wyłącznie przez workflow.
 
 ## Cykl wydania
