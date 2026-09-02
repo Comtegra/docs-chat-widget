@@ -32,3 +32,50 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  fixture-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # najstarszy wspierany konsument: React 18, webpack, bez flag v4
+          - name: react18-webpack
+            react: "^18.3.1"
+            faster: "false"
+            v4: "false"
+          # dzisiejszy default nowego projektu: React 19, webpack, future.v4
+          - name: react19-webpack-v4
+            react: ""
+            faster: "false"
+            v4: "true"
+          # bundler rspack (@docusaurus/faster)
+          - name: react19-faster
+            react: ""
+            faster: "true"
+            v4: "true"
+    name: fixture (${{ matrix.name }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install (npm ci)
+        if: matrix.react == ''
+        run: npm ci
+      - name: Install with React override
+        if: matrix.react != ''
+        # overrides wymuszają JEDNĄ wersję Reacta w całym drzewie (bez dwóch kopii przy hoistingu);
+        # zmiana package.json unieważnia lockfile, stąd install zamiast ci
+        run: |
+          npm pkg set overrides.react='${{ matrix.react }}' overrides.react-dom='${{ matrix.react }}'
+          npm install --no-audit --no-fund
+      - name: Build fixture site
+        env:
+          FIXTURE_FASTER: ${{ matrix.faster }}
+          FIXTURE_V4: ${{ matrix.v4 }}
+        run: npm run build --workspace fixtures/site
+      - name: Smoke check
+        run: |
+          grep -q "docs-chat:ezd:v2" fixtures/site/build/index.html
+          grep -q "docs-chat-navbar-item" fixtures/site/build/index.html

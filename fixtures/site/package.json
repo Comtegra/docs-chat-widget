@@ -1,0 +1,19 @@
+{
+  "name": "docs-chat-fixture-site",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Minimalny konsument paczek widgetu — smoke build w CI (matrix React/bundler)",
+  "scripts": {
+    "build": "docusaurus build",
+    "start": "docusaurus start"
+  },
+  "dependencies": {
+    "@comtegra/docusaurus-theme-docs-chat": "^0.1.0",
+    "@docusaurus/core": "^3.10.0",
+    "@docusaurus/faster": "^3.10.0",
+    "@docusaurus/preset-classic": "^3.10.0",
+    "@mdx-js/react": "^3.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
