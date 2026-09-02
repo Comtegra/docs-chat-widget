@@ -1,5 +1,7 @@
-/* ai-tokens v1.1 — źródło prawdy: cgc-web/styles/ai-tokens.css. (v1.1: +--ai-info dla StatusChip E4)
- * KOPIA 1:1 w cgc-user-docs/src/css/ai-tokens.css — nie edytować kopii, tylko źródło (i skopiować).
+/* ai-tokens v1.2 — od publikacji paczki TO JEST źródło prawdy (kopie w cgc-web/styles
+ * i cgc-user-docs/src/css to legacy do wycięcia przy migracji na paczkę — etap 5).
+ * v1.2: selektory tokenów przez :where() — zerowa specyficzność, nadpisania custom.css
+ * strony-konsumenta zawsze wygrywają. (v1.1: +--ai-info dla StatusChip E4.)
  * Tokeny semantyczne UI AI (Ask CGC w docs, czat cgc-web, konsola admina).
  * Plan: cgc-web/docs/ai-native-ui-plan.md §4.1 (paleta), §4.1b (motion).
  *
@@ -34,8 +36,8 @@
   --ai-radius-card: 0;
 }
 
-.dark,
-[data-theme='dark'] {
+:where(.dark,
+[data-theme='dark']) {
   --ai-page-rgb: 27 27 29;              --ai-page: rgb(var(--ai-page-rgb));               /* #1b1b1d */
   --ai-surface-rgb: 35 35 38;           --ai-surface: rgb(var(--ai-surface-rgb));         /* #232326 */
   --ai-inset-rgb: 32 32 35;             --ai-inset: rgb(var(--ai-inset-rgb));             /* #202023 */
