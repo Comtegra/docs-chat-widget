@@ -10,7 +10,7 @@
  * Promienie: 0 w obu repo (prawo stylu cgc-web; docs od E6 bez nadpisania — jedna rama).
  * Kontrast (WCAG AA) policzony w planie §4.1; nie zmieniać wartości bez przeliczenia.
  */
-:root {
+:where(:root) {
   --ai-page-rgb: 255 255 255;           --ai-page: rgb(var(--ai-page-rgb));               /* #ffffff */
   --ai-surface-rgb: 255 255 255;        --ai-surface: rgb(var(--ai-surface-rgb));         /* #ffffff */
   --ai-inset-rgb: 244 244 244;          --ai-inset: rgb(var(--ai-inset-rgb));             /* #f4f4f4 */

@@ -4,7 +4,9 @@
 @import "./DocsChat/ai-tokens.css";
 
 /* === mapowanie tokenów na motyw strony (nadpisuje stałe z ai-tokens.css) === */
-:root {
+/* :where() zeruje specyficzność: zwykły `:root {}` w custom.css strony ZAWSZE wygrywa,
+   niezależnie od kolejności ładowania arkuszy (customCss vs clientModules paczki) */
+:where(:root) {
   --ai-accent: var(--ifm-color-primary);
   --ai-accent-ink: var(--ifm-color-primary-darker, var(--ifm-color-primary));
   --ai-accent-tint: var(--ifm-color-primary-contrast-background, rgba(0, 0, 0, 0.05));
@@ -17,7 +19,7 @@
   /* glif na akcencie (Wyślij): jasny tekst na kolorze primary — strona może nadpisać */
   --docs-chat-on-accent: var(--ifm-color-white, #ffffff);
 }
-html[data-theme="dark"] {
+:where(html[data-theme="dark"]) {
   --ai-accent-ink: var(--ifm-color-primary-lighter, var(--ifm-color-primary));
 }
 
