@@ -35,31 +35,36 @@ export async function streamDocsChat({ apiUrl, body, signal, onEvent, onActivity
   let sawDone = false;
   let sawError = false;
 
+  const handleFrame = (event) => {
+    switch (event.type) {
+      case "sources":
+      case "step":
+      case "reasoning":
+      case "content":
+        onEvent(event);
+        break;
+      case "error":
+        sawError = true;
+        onEvent({ type: "error", code: typeof event.code === "string" && event.code ? event.code : "llm_error", at: now() });
+        break;
+      case "done":
+        sawDone = true;
+        onEvent({ type: "done", traceId: typeof event.traceId === "string" ? event.traceId : null, at: now() });
+        break;
+      default:
+        break; // nieznane typy ramek — ignorowane (forward compat)
+    }
+  };
+
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     onActivity();
-    for (const event of parse(decoder.decode(value, { stream: true }))) {
-      switch (event.type) {
-        case "sources":
-        case "step":
-        case "reasoning":
-        case "content":
-          onEvent(event);
-          break;
-        case "error":
-          sawError = true;
-          onEvent({ type: "error", code: typeof event.code === "string" && event.code ? event.code : "llm_error", at: now() });
-          break;
-        case "done":
-          sawDone = true;
-          onEvent({ type: "done", traceId: typeof event.traceId === "string" ? event.traceId : null, at: now() });
-          break;
-        default:
-          break; // nieznane typy ramek — ignorowane (forward compat)
-      }
-    }
+    for (const event of parse(decoder.decode(value, { stream: true }))) handleFrame(event);
   }
+  // flush: resztka multibyte w dekoderze i ostatnia linia bez "\n" (proxy tnące strumień zaraz
+  // po ramce `done`) — dopychamy "\n", żeby parser oddał zbuforowaną linię
+  for (const event of parse(decoder.decode() + "\n")) handleFrame(event);
   // kontrakt: `done` jest ZAWSZE — strumień zamknięty bez `done` i bez `error` (proxy uciął) = błąd
   if (!sawDone && !sawError) {
     onEvent({ type: "error", code: "llm_error", at: now() });

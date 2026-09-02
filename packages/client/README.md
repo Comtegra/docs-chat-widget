@@ -8,7 +8,7 @@ i Node ≥ 20. Nadaje się też do integracji poza Reactem (np. Angular.js).
 import { streamDocsChat, reduceThread, initialThreadState } from "@comtegra/docs-chat-client";
 
 await streamDocsChat({
-  url: "https://<host>/api/v1/ezd/chat",
+  apiUrl: "https://<host>/api/v1/ezd/chat",
   body: { prompt: "Jak założyć sprawę?", scope: "all" },
   onEvent: (frame) => { /* sources | step | reasoning | content | done | error */ },
 });

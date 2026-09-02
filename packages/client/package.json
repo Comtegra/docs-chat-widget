@@ -4,6 +4,7 @@
   "description": "Streaming client and shared SSE contract for the docs-chat assistant API (framework-agnostic)",
   "license": "Apache-2.0",
   "type": "module",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Comtegra/docs-chat-widget.git",

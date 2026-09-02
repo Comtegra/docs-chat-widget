@@ -10,8 +10,16 @@ export {
   noticeForErrorCode,
   reduce,
   reduceThread,
+  selectors,
   threadSelectors,
   turnDurationMs,
 } from "./conversation.mjs";
-export { annotateCitations, citedSourceNumbers } from "./citations.mjs";
+export {
+  CITATION_HREF_PREFIX,
+  annotateCitations,
+  citationNumberFromHref,
+  citedSourceNumbers,
+  parseCitations,
+  sourceCardId,
+} from "./citations.mjs";
 export { sanitizeMarkdownHref } from "./safeHref.mjs";
