@@ -1,7 +1,7 @@
 # @comtegra/docusaurus-theme-docs-chat
 
 Widget asystenta dokumentacji (czat RAG, SSE) jako theme Docusaurusa 3. Instalacja nie
-wymaga swizzlowania: theme sam wpina panel przez wrap `Layout`, a przycisk w navbarze
+wymaga swizzlowania: theme sam wpina panel przez wrap `Root`, a przycisk w navbarze
 przez typ `custom-docsChat`. Protokół i stan rozmowy pochodzą z
 [`@comtegra/docs-chat-client`](../client).
 

@@ -6,7 +6,7 @@
 // i bramkę „bieżące żądanie" (spóźnione kontynuacje po Stop nic nie wstrzykną).
 // `ask` ma STABILNĄ tożsamość (prompt/scope przez refy) — handlery dla React.memo w widoku.
 //
-// Persystencja: od 1b panel żyje przez całą nawigację (wrap Layout), więc wystarczy
+// Persystencja: od 1b panel żyje przez całą nawigację (wrap Root), więc wystarczy
 // sessionStorage (przeżycie przeładowania i remontu na /search); modułowa migawka z czasów
 // montażu per strona została usunięta. Utrwalamy tylko zakończone tury i bez `reasoning`.
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
@@ -168,8 +168,8 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
 
   // Sonda dostępności: przy pierwszym otwarciu panelu GET /status z krótkim timeoutem.
   // Sieci z allowlistą (on-prem) tną ruch do API — zamiast wiecznego spinnera użytkownik dostaje
-  // komunikat z adresem do odblokowania. Jedna sonda per mount (Layout remontuje widget między
-  // trasami); udany strumień odpowiedzi zdejmuje komunikat (wolny cold-start ≠ brak dostępu).
+  // komunikat z adresem do odblokowania. Jedna sonda per mount (Root nie remontuje się
+  // przy nawigacji); udany strumień odpowiedzi zdejmuje komunikat (wolny cold-start ≠ brak dostępu).
   const [backendStatus, setBackendStatus] = useState("unknown");
   const probedRef = useRef(false);
   const isPanelOpen = panelMode !== "collapsed";

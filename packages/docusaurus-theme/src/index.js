@@ -3,7 +3,7 @@
 // Wzorzec: @docusaurus/theme-live-codeblock.
 //
 // Co robi:
-// - getThemePath: dostarcza theme/Layout (wrap @theme-init/Layout — strona nic nie swizzluje)
+// - getThemePath: dostarcza theme/Root (wrap @theme-init/Root — strona nic nie swizzluje)
 //   i theme/NavbarItem/ComponentTypes (typ `custom-docsChat` → slot przycisku w navbarze);
 // - validateOptions: opcje z docusaurus.config (themes: [["@comtegra/docusaurus-theme-docs-chat", {…}]]);
 // - contentLoaded/setGlobalData: opcje publiczne dla komponentów (usePluginData);

@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "Docs assistant chat widget as a Docusaurus 3 theme (docs-chat API, SSE)",
   "license": "Apache-2.0",
-  "type": "commonjs",
   "sideEffects": [
     "**/*.css"
   ],

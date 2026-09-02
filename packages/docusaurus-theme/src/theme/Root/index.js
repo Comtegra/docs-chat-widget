@@ -1,17 +1,19 @@
-// Wrap Layout motywu bazowego (@theme-init = komponent pierwszego theme'u, czyli theme-classic;
-// wzorzec @docusaurus/theme-live-codeblock): widget montowany RAZ na szczycie drzewa tras,
-// wewnątrz providerów motywu — żyje przez całą nawigację SPA, strumienie nie są przerywane.
-// Strona-konsument NICZEGO nie swizzluje; jej własny wrap Layout (gdyby istniał) widzi nasz
-// przez @theme-original.
+// Wrap Root (@theme-init/Root = passthrough z theme-fallback @docusaurus/core): jedyny punkt,
+// z którego PACZKA theme'u może globalnie zamontować widget. Wrap Layoutu odpada:
+// @theme-init/Layout to goły Layout theme-fallback (bez LayoutProvider — SSG pada na
+// useScrollController), a @theme-original/Layout z wnętrza własnej warstwy wskazuje na nas
+// samych (rekursja). Root dodatkowo nie remontuje się przy nawigacji (facebook/docusaurus#3919)
+// — panel i strumień przeżywają przejścia między trasami. Strona-konsument NICZEGO nie
+// swizzluje; jej własny wrap Root (gdyby istniał) widzi nasz przez @theme-original.
 //
-// Kontekst strony = useActiveDocContext('default').activeDoc.path (== permalink z baseUrl);
+// Kontekst strony = useActiveDocContext(id).activeDoc.path (== permalink z baseUrl);
 // backend dopasowuje zakres „ta strona" po metadata.route. Poza docs (search, 404, strony
 // własne) permalink = null → działa zakres „Cała dokumentacja".
 //
-// Własny ErrorBoundary: awaria panelu (np. obca migawka sessionStorage) nie może zastąpić całej
-// strony stroną błędu motywu — panel znika, treść zostaje.
+// Własny ErrorBoundary: awaria panelu (np. obca migawka sessionStorage) nie może zastąpić
+// całej strony stroną błędu — panel znika, treść zostaje.
 import React, { useEffect } from "react";
-import Layout from "@theme-init/Layout";
+import Root from "@theme-init/Root";
 import ErrorBoundary from "@docusaurus/ErrorBoundary";
 import { usePluginData } from "@docusaurus/useGlobalData";
 import { useActiveDocContext, useAllDocsData } from "@docusaurus/plugin-content-docs/client";
@@ -53,13 +55,13 @@ function DocsChatCrashed({ error }) {
 // komponentu klasowego — hooki muszą więc siedzieć w komponencie zwracanym jako element
 const docsChatFallback = ({ error }) => <DocsChatCrashed error={error} />;
 
-export default function LayoutWrapper(props) {
+export default function RootWrapper(props) {
   return (
-    <Layout {...props}>
+    <Root {...props}>
       {props.children}
       <ErrorBoundary fallback={docsChatFallback}>
         <DocsChatMount />
       </ErrorBoundary>
-    </Layout>
+    </Root>
   );
 }
