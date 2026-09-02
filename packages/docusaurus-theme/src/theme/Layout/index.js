@@ -14,16 +14,28 @@ import React, { useEffect } from "react";
 import Layout from "@theme-init/Layout";
 import ErrorBoundary from "@docusaurus/ErrorBoundary";
 import { usePluginData } from "@docusaurus/useGlobalData";
-import { useActiveDocContext } from "@docusaurus/plugin-content-docs/client";
+import { useActiveDocContext, useAllDocsData } from "@docusaurus/plugin-content-docs/client";
 
 import DocsChat from "../../DocsChat";
 
+// useActiveDocContext wymaga ISTNIEJĄCEJ instancji docs — strona bez docs (albo z docs pod innym
+// id niż "default") nie może wywalać widgetu, więc id bierzemy z useAllDocsData(); bez docs
+// w ogóle nie montujemy hooka (permalink=null → działa zakres „Cała dokumentacja")
 function DocsChatMount() {
   const options = usePluginData("docusaurus-theme-docs-chat");
-  const { activeDoc } = useActiveDocContext("default");
+  const allDocsData = useAllDocsData();
+  const docsPluginId = allDocsData.default ? "default" : Object.keys(allDocsData)[0];
   if (!options || options.enabled === false) {
     return null;
   }
+  if (!docsPluginId) {
+    return <DocsChat options={options} permalink={null} />;
+  }
+  return <DocsChatDocsAware options={options} docsPluginId={docsPluginId} />;
+}
+
+function DocsChatDocsAware({ options, docsPluginId }) {
+  const { activeDoc } = useActiveDocContext(docsPluginId);
   return <DocsChat options={options} permalink={activeDoc ? activeDoc.path : null} />;
 }
 

@@ -40,7 +40,8 @@ export default function NavbarEntry({ open, onOpen, onCollapse, copy, resetKey }
   }, [onOpen]);
 
   if (!slot) return null;
-  const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "");
+  const platform = typeof navigator !== "undefined" ? navigator.userAgentData?.platform || navigator.platform || "" : "";
+  const isMac = /Mac|iPhone|iPad/.test(platform);
   return createPortal(
     <button
       id={NAVBAR_BUTTON_ID}

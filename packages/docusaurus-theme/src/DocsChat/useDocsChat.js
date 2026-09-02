@@ -166,6 +166,24 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
     dispatch({ type: "abort", reason: "stopped", at: Date.now() });
   }, []);
 
+  // Sonda dostępności: przy pierwszym otwarciu panelu GET /status z krótkim timeoutem.
+  // Sieci z allowlistą (on-prem) tną ruch do API — zamiast wiecznego spinnera użytkownik dostaje
+  // komunikat z adresem do odblokowania. Jedna sonda per mount (Layout remontuje widget między
+  // trasami); udany strumień odpowiedzi zdejmuje komunikat (wolny cold-start ≠ brak dostępu).
+  const [backendStatus, setBackendStatus] = useState("unknown");
+  const probedRef = useRef(false);
+  const isPanelOpen = panelMode !== "collapsed";
+  useEffect(() => {
+    if (!statusUrl || !isPanelOpen || probedRef.current) return;
+    probedRef.current = true;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), STATUS_PROBE_TIMEOUT_MS);
+    fetch(statusUrl, { signal: controller.signal })
+      .then((response) => setBackendStatus(response.ok ? "ok" : "unreachable"))
+      .catch(() => setBackendStatus("unreachable"))
+      .finally(() => clearTimeout(timer));
+  }, [statusUrl, isPanelOpen]);
+
   /**
    * @param {"page"|"all"} [nextScope]     domyślnie bieżący zakres
    * @param {string} [promptOverride]      domyślnie szkic z composera (i tylko wtedy jest czyszczony)
@@ -213,11 +231,12 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
         const client = readClientId(clientIdKey);
         await streamDocsChat({
           apiUrl,
-          body: { prompt: trimmedPrompt, locale, scope: targetScope, page, ...(client ? { client } : {}) },
+          body: { prompt: trimmedPrompt, locale, scope: targetScope, ...(page ? { page } : {}), ...(client ? { client } : {}) },
           signal,
           onEvent: emit,
           onActivity: armTimeout,
         });
+        if (isCurrent()) setBackendStatus("ok"); // udany strumień = API osiągalne (sonda mogła spaść na cold-starcie)
       } catch (error) {
         if (signal.aborted) {
           // Stop / timeout — reducer dostał już `abort`
@@ -226,8 +245,9 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
         console.error("Docs chat error:", error);
         emit({ type: "error", code: "llm_error", at: Date.now() });
       } finally {
-        clearTimer();
+        // timer tylko dla bieżącego żądania — nowszego nie wolno rozbroić
         if (controllerRef.current === controller) {
+          clearTimer();
           controllerRef.current = null;
         }
       }
@@ -269,23 +289,6 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
     setPrompt("");
     clearPersistedChatState(snapshotKey);
   }, [stop]);
-
-  // Sonda dostępności: przy pierwszym otwarciu panelu GET /status z krótkim timeoutem.
-  // Sieci z allowlistą (on-prem) tną ruch do API — zamiast wiecznego spinnera użytkownik dostaje
-  // komunikat z adresem do odblokowania. Wynik trzymany per sesja (jedno żądanie).
-  const [backendStatus, setBackendStatus] = useState("unknown");
-  const probedRef = useRef(false);
-  const isPanelOpen = panelMode !== "collapsed";
-  useEffect(() => {
-    if (!statusUrl || !isPanelOpen || probedRef.current) return;
-    probedRef.current = true;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), STATUS_PROBE_TIMEOUT_MS);
-    fetch(statusUrl, { signal: controller.signal })
-      .then((response) => setBackendStatus(response.ok ? "ok" : "unreachable"))
-      .catch(() => setBackendStatus("unreachable"))
-      .finally(() => clearTimeout(timer));
-  }, [statusUrl, isPanelOpen]);
 
   return {
     turns: thread.turns,

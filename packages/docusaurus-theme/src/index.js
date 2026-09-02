@@ -35,8 +35,12 @@ const optionsSchema = Joi.object({
   enabled: Joi.boolean().default(true),
   // pasek „Zapytaj o to" nad zaznaczeniem tekstu
   selectionActions: Joi.boolean().default(true),
-  // parametr URL z id wdrożenia (atrybucja per instalacja, np. "r"); null = wyłączone
-  clientIdQueryParam: Joi.string().max(32).allow(null).default(null),
+  // parametr URL z id wdrożenia (atrybucja per instalacja, np. "r"); null = wyłączone.
+  // Ścisły pattern, bo wartość trafia do inline <script> w injectHtmlTags
+  clientIdQueryParam: Joi.string()
+    .pattern(/^[A-Za-z0-9_-]{1,32}$/)
+    .allow(null)
+    .default(null),
   // sonda GET /status przy pierwszym otwarciu panelu (komunikat dla sieci z allowlistą)
   statusProbe: Joi.boolean().default(true),
 });
@@ -79,9 +83,12 @@ module.exports = function themeDocsChat(context, options) {
 
     getDefaultCodeTranslationMessages() {
       const locale = context.i18n.currentLocale;
-      const file = path.resolve(__dirname, `../locales/${locale}.json`);
-      if (fs.existsSync(file)) {
-        return JSON.parse(fs.readFileSync(file, "utf8"));
+      // fallback na część językową ("pl-PL" → "pl.json")
+      for (const candidate of [locale, locale.split("-")[0]]) {
+        const file = path.resolve(__dirname, `../locales/${candidate}.json`);
+        if (fs.existsSync(file)) {
+          return JSON.parse(fs.readFileSync(file, "utf8"));
+        }
       }
       return {}; // brak pliku = angielskie defaulty z i18n.js (translate())
     },
@@ -90,9 +97,12 @@ module.exports = function themeDocsChat(context, options) {
       if (!options.enabled) {
         return {};
       }
+      // literał do inline <script>: JSON.stringify + escape "<" (sekwencja "</script>" w wartości
+      // zamknęłaby tag) — pattern Joi już to wyklucza, escape zostaje jako druga linia obrony
+      const scriptLiteral = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
       const captureClientId = options.clientIdQueryParam
-        ? `var p=new URLSearchParams(location.search).get(${JSON.stringify(options.clientIdQueryParam)});` +
-          `if(p&&/^[\\x21-\\x7e]{1,128}$/.test(p)){sessionStorage.setItem(${JSON.stringify(keys.clientId)},p);}`
+        ? `var p=new URLSearchParams(location.search).get(${scriptLiteral(options.clientIdQueryParam)});` +
+          `if(p&&/^[\\x21-\\x7e]{1,128}$/.test(p)){sessionStorage.setItem(${scriptLiteral(keys.clientId)},p);}`
         : "";
       return {
         headTags: [
@@ -100,7 +110,7 @@ module.exports = function themeDocsChat(context, options) {
             tagName: "script",
             attributes: {},
             innerHTML:
-              `(function(){try{var s=JSON.parse(sessionStorage.getItem(${JSON.stringify(keys.snapshot)})||'null');` +
+              `(function(){try{var s=JSON.parse(sessionStorage.getItem(${scriptLiteral(keys.snapshot)})||'null');` +
               `var m=s&&s.panelMode;if(m==='expanded'||m==='fullscreen'){document.documentElement.setAttribute('data-docs-chat',m);}` +
               captureClientId +
               `}catch(e){}})();`,

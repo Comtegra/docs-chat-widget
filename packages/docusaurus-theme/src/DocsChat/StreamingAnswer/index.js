@@ -103,6 +103,9 @@ export function errorMessageFor(copy, notice, scope = "all") {
   if (notice === "rate_limited") return copy.rateLimited;
   if (notice === "no_context") return scope === "page" ? copy.noContext : copy.noContextAll;
   if (notice === "timeout") return copy.timeoutError;
+  // kontrakt: unsafe/pricing kończą turę statusem done (to nie błędy) — treść z backendu
+  // renderuje się normalnie, bez czerwonej ramki role=alert
+  if (notice === "unsafe" || notice === "pricing") return null;
   return copy.genericError;
 }
 

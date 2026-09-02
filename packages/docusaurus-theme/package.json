@@ -4,6 +4,9 @@
   "description": "Docs assistant chat widget as a Docusaurus 3 theme (docs-chat API, SSE)",
   "license": "Apache-2.0",
   "type": "commonjs",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Comtegra/docs-chat-widget.git",
@@ -23,8 +26,8 @@
   },
   "dependencies": {
     "@comtegra/docs-chat-client": "^0.1.0",
+    "@docusaurus/theme-common": "^3.10.0",
     "@docusaurus/utils-validation": "^3.10.0",
-    "clsx": "^2.0.0",
     "react-markdown": "^9.1.0",
     "remark-gfm": "^4.0.1"
   },
