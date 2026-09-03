@@ -31,7 +31,7 @@
     "build": "node scripts/build-iife.mjs",
     "build:types": "tsc -p tsconfig.types.json",
     "prepublishOnly": "npm run build && npm run build:types",
-    "test": "npm run build && node --test \"tests/**/*.test.mjs\""
+    "test": "npm run build && node --test tests/*.test.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",

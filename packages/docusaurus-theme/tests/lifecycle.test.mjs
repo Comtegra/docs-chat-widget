@@ -3,7 +3,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { Joi } from "@docusaurus/utils-validation";
+// CJS bez named exports dla ESM na Node 20/22 (Node 26 je wykrywa) — default import + destrukturyzacja
+import utilsValidation from "@docusaurus/utils-validation";
+const { Joi } = utilsValidation;
 
 import { PANEL_MODES } from "../src/DocsChat/lib/preferences.mjs";
 import { CLIENT_ID_PATTERN } from "@comtegra/docs-chat-client";
