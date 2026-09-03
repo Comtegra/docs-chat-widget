@@ -4,30 +4,70 @@
   "title": "SseFrame",
   "description": "Jedna ramka strumienia SSE czatu (linia `data: <json>`). Kontrakt ADDYTYWNY w /v1: konsument MUSI ignorować nieznane typy ramek i nieznane pola; `done` albo `error` zawsze kończy strumień.",
   "oneOf": [
-    { "$ref": "#/$defs/sources" },
-    { "$ref": "#/$defs/step" },
-    { "$ref": "#/$defs/reasoning" },
-    { "$ref": "#/$defs/content" },
-    { "$ref": "#/$defs/done" },
-    { "$ref": "#/$defs/error" }
+    {
+      "$ref": "#/$defs/sources"
+    },
+    {
+      "$ref": "#/$defs/step"
+    },
+    {
+      "$ref": "#/$defs/reasoning"
+    },
+    {
+      "$ref": "#/$defs/content"
+    },
+    {
+      "$ref": "#/$defs/done"
+    },
+    {
+      "$ref": "#/$defs/error"
+    }
   ],
   "$defs": {
     "sources": {
       "type": "object",
-      "required": ["type", "sources"],
+      "required": [
+        "type",
+        "sources"
+      ],
       "properties": {
-        "type": { "const": "sources" },
+        "type": {
+          "const": "sources"
+        },
         "sources": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["title", "route", "url", "snippet", "score"],
+            "required": [
+              "title",
+              "route",
+              "url",
+              "snippet",
+              "score"
+            ],
             "properties": {
-              "title": { "type": "string" },
-              "route": { "type": ["string", "null"], "description": "ścieżka na stronie dokumentacji (z baseUrl)" },
-              "url": { "type": ["string", "null"] },
-              "snippet": { "type": "string" },
-              "score": { "type": "number" }
+              "title": {
+                "type": "string"
+              },
+              "route": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "ścieżka na stronie dokumentacji (z baseUrl)"
+              },
+              "url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "snippet": {
+                "type": "string"
+              },
+              "score": {
+                "type": "number"
+              }
             }
           }
         }
@@ -35,39 +75,106 @@
     },
     "step": {
       "type": "object",
-      "required": ["type", "id", "status"],
+      "required": [
+        "type",
+        "id",
+        "status"
+      ],
       "properties": {
-        "type": { "const": "step" },
-        "id": { "type": "string", "description": "znane: retrieve, answer; nowe id są addytywne" },
-        "status": { "enum": ["running", "done", "failed"] },
-        "meta": { "type": "object", "description": "np. {count} dla retrieve, {model} dla answer" }
+        "type": {
+          "const": "step"
+        },
+        "id": {
+          "type": "string",
+          "description": "znane: retrieve, answer; nowe id są addytywne"
+        },
+        "status": {
+          "enum": [
+            "running",
+            "done",
+            "failed"
+          ]
+        },
+        "meta": {
+          "type": "object",
+          "description": "np. {count} dla retrieve, {model} dla answer"
+        }
       }
     },
     "reasoning": {
       "type": "object",
-      "required": ["type", "content"],
-      "properties": { "type": { "const": "reasoning" }, "content": { "type": "string" } }
+      "required": [
+        "type",
+        "content"
+      ],
+      "properties": {
+        "type": {
+          "const": "reasoning"
+        },
+        "content": {
+          "type": "string"
+        }
+      }
     },
     "content": {
       "type": "object",
-      "required": ["type", "content"],
-      "properties": { "type": { "const": "content" }, "content": { "type": "string" } }
+      "required": [
+        "type",
+        "content"
+      ],
+      "properties": {
+        "type": {
+          "const": "content"
+        },
+        "content": {
+          "type": "string"
+        }
+      }
     },
     "done": {
       "type": "object",
-      "required": ["type", "traceId"],
+      "required": [
+        "type",
+        "traceId"
+      ],
       "properties": {
-        "type": { "const": "done" },
-        "traceId": { "type": ["string", "null"], "description": "null gdy obserwowalność wyłączona; klucz feedbacku" }
+        "type": {
+          "const": "done"
+        },
+        "traceId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "null gdy obserwowalność wyłączona; klucz feedbacku"
+        },
+        "aiGenerated": {
+          "type": "boolean",
+          "description": "oznaczenie AI Act (art. 50(2)) z gatewaya LLM: treść wygenerowana maszynowo; pole addytywne, obecne tylko gdy true"
+        }
       }
     },
     "error": {
       "type": "object",
-      "required": ["type", "code"],
+      "required": [
+        "type",
+        "code"
+      ],
       "properties": {
-        "type": { "const": "error" },
-        "code": { "enum": ["invalid_request", "rate_limited", "no_context", "llm_error"] },
-        "message": { "type": "string" }
+        "type": {
+          "const": "error"
+        },
+        "code": {
+          "enum": [
+            "invalid_request",
+            "rate_limited",
+            "no_context",
+            "llm_error"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
       }
     }
   }

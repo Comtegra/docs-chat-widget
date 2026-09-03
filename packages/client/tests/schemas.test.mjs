@@ -13,6 +13,11 @@ const request = ajv.compile(schema("chat-request.schema.json"));
 const status = ajv.compile(schema("status-response.schema.json"));
 const chunk = ajv.compile(schema("import-chunk.schema.json"));
 
+test("done z aiGenerated (oznaczenie AI Act z gatewaya) waliduje się — pole addytywne", () => {
+  assert.ok(frame({ type: "done", traceId: "t-1", aiGenerated: true }));
+  assert.ok(frame({ type: "done", traceId: null }));
+});
+
 test("every frame the backend emits validates against sse-frame.schema.json", () => {
   const valid = [
     { type: "step", id: "retrieve", status: "running" },
