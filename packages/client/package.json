@@ -1,6 +1,6 @@
 {
   "name": "@comtegra/docs-chat-client",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Streaming client and shared SSE contract for the docs-chat assistant API (framework-agnostic)",
   "license": "Apache-2.0",
   "type": "module",
