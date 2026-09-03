@@ -42,6 +42,15 @@ test("every frame the backend emits validates against sse-frame.schema.json", ()
   }
 });
 
+test("schemat `client` ≡ CLIENT_ID_PATTERN (jedno źródło wzorca)", async () => {
+  const { CLIENT_ID_PATTERN, isValidClientId } = await import("../src/index.mjs");
+  const samples = ["dXJ6YWQtMQ", "a", "A-b_C9", "x".repeat(64), "x".repeat(65), "dXJ6YWQtMQ==", "a b", "zł", "<x>", "a\n", "", "a/b", "a+b"];
+  for (const value of samples) {
+    assert.equal(request({ prompt: "q", client: value }), isValidClientId(value), `rozbieżność dla ${JSON.stringify(value)}`);
+  }
+  assert.equal(CLIENT_ID_PATTERN.source, "^[A-Za-z0-9_-]{1,64}$");
+});
+
 test("chat request schema matches the handler's validation rules", () => {
   assert.ok(request({ prompt: "Jak założyć sprawę?", scope: "all", client: "dXJ6YWQtMQ" }));
   assert.equal(request({ prompt: "q", client: "dXJ6YWQtMQ==" }), false); // base64 z paddingiem poza zbiorem

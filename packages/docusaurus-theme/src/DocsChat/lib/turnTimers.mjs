@@ -33,26 +33,24 @@ export function createTurnTimers({ inactivityMs, turnMs, onTimeout, setTimeoutIm
       turn = null;
     }
   };
-  return {
-    /** start tury: oba timery */
-    start() {
+  /** chunk przyszedł: TYLKO timer nieaktywności od nowa */
+  const activity = () => {
+    if (!active) return;
+    clearInactivity();
+    inactivity = setTimeoutImpl(() => {
       clearAll();
-      active = true;
-      turn = setTimeoutImpl(() => {
-        clearAll();
-        onTimeout();
-      }, turnMs);
-      this.activity();
-    },
-    /** chunk przyszedł: TYLKO timer nieaktywności od nowa */
-    activity() {
-      if (!active) return;
-      clearInactivity();
-      inactivity = setTimeoutImpl(() => {
-        clearAll();
-        onTimeout();
-      }, inactivityMs);
-    },
-    clear: clearAll,
+      onTimeout();
+    }, inactivityMs);
   };
+  /** start tury: oba timery (domknięcia, nie `this` — bezpieczne przy destrukturyzacji) */
+  const start = () => {
+    clearAll();
+    active = true;
+    turn = setTimeoutImpl(() => {
+      clearAll();
+      onTimeout();
+    }, turnMs);
+    activity();
+  };
+  return { start, activity, clear: clearAll };
 }

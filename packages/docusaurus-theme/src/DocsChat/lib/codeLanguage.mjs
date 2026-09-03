@@ -25,7 +25,7 @@ export function isCgcProposal(code, language) {
   return (language === "bash" || language === "text") && CGC_COMMAND.test(String(code));
 }
 
-const SHELL_LANGUAGES = new Set(["bash", "powershell", "ps1", "cmd", "batch", "sh"]);
+const SHELL_LANGUAGES = new Set(["bash", "powershell", "pwsh", "ps1", "cmd", "bat", "batch", "dos", "sh", "fish", "shell-script"]);
 
 /**
  * Etykieta „propozycja startowa" dla KAŻDEJ wygenerowanej komendy shellowej (nie tylko `cgc`):
