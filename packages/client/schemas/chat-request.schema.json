@@ -4,19 +4,47 @@
   "title": "DocsChatRequest",
   "description": "Body żądania POST /api/v1/{tenant}/chat",
   "type": "object",
-  "required": ["prompt"],
+  "required": [
+    "prompt"
+  ],
   "additionalProperties": true,
   "properties": {
-    "prompt": { "type": "string", "minLength": 1, "maxLength": 2000 },
-    "locale": { "type": "string", "pattern": "^[a-z]{2}$", "description": "domyślnie defaultLocale tenanta" },
-    "scope": { "enum": ["page", "all"], "description": "page wymaga page.permalink" },
-    "client": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[\\x21-\\x7e]+$", "description": "nieprzezroczysty id wdrożenia (atrybucja, nie autoryzacja)" },
+    "prompt": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "locale": {
+      "type": "string",
+      "pattern": "^[a-z]{2}$",
+      "description": "domyślnie defaultLocale tenanta"
+    },
+    "scope": {
+      "enum": [
+        "page",
+        "all"
+      ],
+      "description": "page wymaga page.permalink"
+    },
+    "client": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "description": "nieprzezroczysty id wdrożenia, base64url-owy zbiór znaków (atrybucja, nie autoryzacja)"
+    },
     "page": {
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "permalink": { "type": "string", "maxLength": 512, "pattern": "^/" },
-        "title": { "type": "string" }
+        "permalink": {
+          "type": "string",
+          "maxLength": 512,
+          "pattern": "^/"
+        },
+        "title": {
+          "type": "string"
+        }
       }
     }
   }

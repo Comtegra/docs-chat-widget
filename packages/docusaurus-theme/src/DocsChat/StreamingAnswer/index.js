@@ -24,7 +24,7 @@ const COPIED_RESET_MS = 1500;
  * Overrides react-markdown dla jednej tury (cytowania potrzebują `turnId` i listy źródeł).
  * @param {{ turnId: string, sources: Array<{ title: string }>, copy: any }} ctx
  */
-export function buildMarkdownComponents({ turnId, sources, copy, settled = true }) {
+export function buildMarkdownComponents({ turnId, sources, copy, settled = true, externalLinks = "allow" }) {
   const focusCard = (n) => (event) => {
     const card = typeof document !== "undefined" ? document.getElementById(sourceCardId(turnId, n)) : null;
     if (!card) return; // brak karty (np. źródła jeszcze nie przyszły) → zwykła nawigacja hash
@@ -55,7 +55,22 @@ export function buildMarkdownComponents({ turnId, sources, copy, settled = true 
       if (!safeHref) {
         return <span {...props}>{children}</span>;
       }
-      const isExternal = /^https?:\/\//i.test(safeHref);
+      const isExternal = /^https?:\/\//i.test(safeHref) || /^mailto:/i.test(safeHref);
+      if (isExternal && externalLinks === "text") {
+        // polityka "text": link spoza strony jako tekst z widocznym celem — treść indeksu (indirect
+        // prompt injection) nie może podsunąć klikalnego phishingu; użytkownik widzi dokąd prowadził
+        let target = safeHref;
+        try {
+          target = /^mailto:/i.test(safeHref) ? safeHref : new URL(safeHref).host;
+        } catch {
+          // zostaje pełny href
+        }
+        return (
+          <span {...props}>
+            {children} <span aria-hidden="true">({target})</span>
+          </span>
+        );
+      }
       return (
         <a href={safeHref} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noreferrer" : undefined} {...props}>
           {children}
@@ -121,9 +136,10 @@ export function errorMessageFor(copy, notice, scope = "all") {
  *   feedback: { value: 1|-1, pending: boolean, stored: boolean|null } | undefined,
  *   onFeedback: (traceId: string, value: 1|-1) => void,
  *   onRetry: (scope: "page"|"all", prompt: string) => void,
+ *   externalLinks?: "allow"|"text",
  * }} props
  */
-function StreamingAnswer({ turnId, turn, prompt, scope, isLast, loading, copy, feedback, onFeedback, onRetry }) {
+function StreamingAnswer({ turnId, turn, prompt, scope, isLast, loading, copy, feedback, onFeedback, onRetry, externalLinks = "allow" }) {
   const errorMessage = errorMessageFor(copy, turn.notice, scope);
   const hasReasoning = Boolean(turn.reasoning && turn.reasoning.trim());
   const isRunning = turn.status === "running";
@@ -134,8 +150,8 @@ function StreamingAnswer({ turnId, turn, prompt, scope, isLast, loading, copy, f
   // `settled` (tura zakończona) → CodeBlock montuje blok motywu na nowo, żeby jego przycisk zawijania
   // zmierzył pełną szerokość kodu (motyw mierzy tylko przy montażu i resize okna)
   const components = useMemo(
-    () => buildMarkdownComponents({ turnId, sources, copy, settled: !isRunning }),
-    [turnId, sources, copy, isRunning]
+    () => buildMarkdownComponents({ turnId, sources, copy, settled: !isRunning, externalLinks }),
+    [turnId, sources, copy, isRunning, externalLinks]
   );
   // useDeferredValue: przy szybkim strumieniu React może pominąć pośrednie renderowania markdownu
   const answer = useDeferredValue(turn.answer);

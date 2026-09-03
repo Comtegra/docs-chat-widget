@@ -26,7 +26,12 @@ test("validateOptions: wymagane pola, pattern tenanta i clientIdQueryParam", () 
   const ok = validateOptions({ options: { ...baseOptions, clientIdQueryParam: "r" }, validate });
   assert.equal(ok.clientIdQueryParam, "r");
   assert.equal(ok.statusProbe, true);
+  assert.equal(ok.externalLinks, "allow");
   assert.deepEqual(ok.examplePrompts, []);
+  // http tylko dla localhost: https strona + http API = mixed content / zły fallback na produkcji
+  assert.throws(() => validateOptions({ options: { ...baseOptions, apiBaseUrl: "http://ask.example.com" }, validate }), /localhost/);
+  assert.equal(validateOptions({ options: { ...baseOptions, apiBaseUrl: "http://localhost:3001" }, validate }).apiBaseUrl, "http://localhost:3001");
+  assert.throws(() => validateOptions({ options: { ...baseOptions, externalLinks: "maybe" }, validate }));
 });
 
 test("setGlobalData: klucze storage per tenant, apiBaseUrl bez końcowego slasha", () => {

@@ -249,6 +249,7 @@ export default function DocsChat({ options, permalink }) {
                       {/* karty źródeł PRZED odpowiedzią (retrieval → odpowiedź) — jak w cgc-web */}
                       <ContextCards turnId={entry.id} label={copy.sources} sources={turn.sources} />
                       <StreamingAnswer
+                        externalLinks={options.externalLinks}
                         turnId={entry.id}
                         turn={turn}
                         prompt={entry.prompt}

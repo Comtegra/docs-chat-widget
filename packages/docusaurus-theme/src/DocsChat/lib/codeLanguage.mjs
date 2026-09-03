@@ -24,3 +24,15 @@ export function isCgcProposal(code, language) {
   // gołe ``` (częste u LLM) → "text": polecenie cgc nadal dostaje etykietę
   return (language === "bash" || language === "text") && CGC_COMMAND.test(String(code));
 }
+
+const SHELL_LANGUAGES = new Set(["bash", "powershell", "ps1", "cmd", "batch", "sh"]);
+
+/**
+ * Etykieta „propozycja startowa" dla KAŻDEJ wygenerowanej komendy shellowej (nie tylko `cgc`):
+ * model może wygenerować dowolne polecenie, a użytkownik je kopiuje.
+ * @param {string} code
+ * @param {string} language
+ */
+export function isCommandProposal(code, language) {
+  return SHELL_LANGUAGES.has(language) || isCgcProposal(code, language);
+}

@@ -16,7 +16,7 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
 import ThemeCodeBlock from "@theme/CodeBlock";
 import styles from "./styles.module.css";
-import { languageFromClassName, isCgcProposal } from "../lib/codeLanguage.mjs";
+import { languageFromClassName, isCommandProposal } from "../lib/codeLanguage.mjs";
 
 /** @param {unknown} node */
 function textOf(node) {
@@ -63,7 +63,7 @@ export default function CodeBlock({ children, proposalLabel, settled = true }) {
 
   return (
     <div ref={cardRef} className={styles.codeCard}>
-      {isCgcProposal(code, language) && <span className={styles.codeBadge}>{proposalLabel}</span>}
+      {isCommandProposal(code, language) && <span className={styles.codeBadge}>{proposalLabel}</span>}
       <ThemeCodeBlock key={`${settled ? "settled" : "streaming"}:${widthEpoch}`} language={language}>
         {code}
       </ThemeCodeBlock>

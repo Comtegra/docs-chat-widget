@@ -16,11 +16,17 @@
 /**
  * @returns {(chunkText: string) => Array<Record<string, unknown>>} push — zwraca sparsowane ramki z chunka
  */
+const MAX_LINE_CHARS = 1_000_000; // ramka to kilobajty; megabajtowa „linia" = wadliwy/wrogi backend
+
 export function createSseParser() {
   let buffer = "";
 
   return function push(chunkText) {
     buffer += chunkText;
+    if (buffer.length > MAX_LINE_CHARS) {
+      buffer = "";
+      throw new Error("SSE line exceeds the size limit");
+    }
     const lines = buffer.split("\n");
     buffer = lines.pop() ?? "";
 

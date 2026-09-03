@@ -43,7 +43,8 @@ test("every frame the backend emits validates against sse-frame.schema.json", ()
 });
 
 test("chat request schema matches the handler's validation rules", () => {
-  assert.ok(request({ prompt: "Jak założyć sprawę?", scope: "all", client: "dXJ6YWQtMQ==" }));
+  assert.ok(request({ prompt: "Jak założyć sprawę?", scope: "all", client: "dXJ6YWQtMQ" }));
+  assert.equal(request({ prompt: "q", client: "dXJ6YWQtMQ==" }), false); // base64 z paddingiem poza zbiorem
   assert.ok(request({ prompt: "q", locale: "pl", scope: "page", page: { permalink: "/manual/docs/a", title: "A" } }));
   assert.equal(request({ prompt: "" }), false);
   assert.equal(request({ prompt: "x".repeat(2001) }), false);

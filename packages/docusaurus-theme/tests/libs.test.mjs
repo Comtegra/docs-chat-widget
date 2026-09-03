@@ -13,7 +13,7 @@ import {
   isAskableAncestry,
   normalizeSelectionText,
 } from "../src/DocsChat/lib/selection.mjs";
-import { isCgcProposal, languageFromClassName } from "../src/DocsChat/lib/codeLanguage.mjs";
+import { isCgcProposal, isCommandProposal, languageFromClassName } from "../src/DocsChat/lib/codeLanguage.mjs";
 
 
 test("formatSeconds: one decimal below 10 s, whole seconds after; locale decimal separator", () => {
@@ -39,6 +39,10 @@ test("languageFromClassName: shell aliases → bash, unknown → text; isCgcProp
   assert.equal(isCgcProposal("cgc compute create", "text"), true); // gołe ``` bez języka
   assert.equal(isCgcProposal("mycgc run", "bash"), false);
   assert.equal(isCgcProposal("echo cgcx", "bash"), false);
+  assert.equal(isCommandProposal("Remove-Item x", "powershell"), true);
+  assert.equal(isCommandProposal("rm -rf ./tmp", "bash"), true);
+  assert.equal(isCommandProposal("print(1)", "python"), false);
+  assert.equal(isCommandProposal("cgc status", "text"), true);
 });
 
 // --- selection (E5) -----------------------------------------------------------------------------

@@ -223,7 +223,7 @@ export const initialThreadState = Object.freeze({ turns: /** @type {ThreadTurn[]
  */
 export function isRestorableTurn(value) {
   const t = /** @type {any} */ (value);
-  if (!t || typeof t !== "object" || typeof t.id !== "string" || typeof t.prompt !== "string") return false;
+  if (!t || typeof t !== "object" || typeof t.id !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(t.id) || typeof t.prompt !== "string") return false;
   if (t.scope !== "page" && t.scope !== "all") return false;
   const turn = t.turn;
   if (!turn || typeof turn !== "object") return false;
@@ -234,7 +234,15 @@ export function isRestorableTurn(value) {
   if (turn.traceId !== null && turn.traceId !== undefined && typeof turn.traceId !== "string") return false;
   if (!Array.isArray(turn.steps) || !Array.isArray(turn.sources)) return false;
   if (!turn.steps.every((/** @type {any} */ step) => step && typeof step === "object" && typeof step.id === "string" && ["running", "done", "failed"].includes(step.status))) return false;
-  if (!turn.sources.every((/** @type {any} */ source) => source && typeof source === "object")) return false;
+  // sessionStorage dzieli origin z innymi aplikacjami pod tą samą domeną: pola źródeł muszą być
+  // stringami (albo null), inaczej render karty rzuca i ErrorBoundary chowa cały panel
+  const stringOrNull = (/** @type {unknown} */ v) => v === null || v === undefined || typeof v === "string";
+  if (
+    !turn.sources.every(
+      (/** @type {any} */ source) =>
+        source && typeof source === "object" && typeof source.title === "string" && stringOrNull(source.route) && stringOrNull(source.url) && stringOrNull(source.snippet)
+    )
+  ) return false;
   if (typeof turn.answer !== "string" || typeof turn.reasoning !== "string") return false;
   return true;
 }

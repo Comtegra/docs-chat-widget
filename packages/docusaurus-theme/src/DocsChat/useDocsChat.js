@@ -19,6 +19,8 @@ import { normalizePanelMode, normalizeScope } from "./lib/preferences.mjs";
 // Klucze sessionStorage per tenant przychodzą z lifecycle'u theme'u (options.storageKeys:
 // { snapshot, clientId }) — ten sam snapshot czyta skrypt pre-hydracji (injectHtmlTags).
 export const REQUEST_TIMEOUT_MS = 30000;
+// twardy sufit całej tury: backend strumieniujący bez końca nie może trzymać karty w nieskończoność
+export const TURN_TIMEOUT_MS = 300_000;
 const STATUS_PROBE_TIMEOUT_MS = 3000;
 
 function loadStoredChatState(key) {
@@ -99,10 +101,15 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
 
   const loading = threadSelectors.loading(thread);
 
+  const turnTimeoutRef = useRef(null);
   const clearTimer = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
+    }
+    if (turnTimeoutRef.current) {
+      clearTimeout(turnTimeoutRef.current);
+      turnTimeoutRef.current = null;
     }
   };
 
@@ -226,6 +233,12 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
       const startedAt = Date.now();
       dispatch({ type: "start", id: `turn-${startedAt}`, prompt: trimmedPrompt, scope: targetScope, at: startedAt });
       armTimeout();
+      turnTimeoutRef.current = setTimeout(() => {
+        if (controllerRef.current !== controller) return;
+        controllerRef.current = null;
+        controller.abort();
+        dispatch({ type: "abort", reason: "timeout", at: Date.now() });
+      }, TURN_TIMEOUT_MS);
 
       try {
         const client = readClientId(clientIdKey);

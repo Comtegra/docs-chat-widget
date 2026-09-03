@@ -19,9 +19,18 @@ const path = require("node:path");
 const { Joi } = require("@docusaurus/utils-validation");
 
 const optionsSchema = Joi.object({
-  // origin API docs-chat, bez ścieżki (np. https://ask.comtegra.cloud)
+  // origin API docs-chat, bez ścieżki (np. https://ask.comtegra.cloud). `http:` tylko dla localhost:
+  // strona https z API po http to mixed content, a http://localhost przeglądarki NIE blokują —
+  // build produkcyjny z takim fallbackiem wysyłałby pytania na lokalny port użytkownika
   apiBaseUrl: Joi.string()
     .uri({ scheme: ["http", "https"] })
+    .custom((value, helpers) => {
+      const url = new URL(value);
+      if (url.protocol === "http:" && !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)) {
+        return helpers.message({ custom: "apiBaseUrl: http:// is allowed only for localhost/127.0.0.1" });
+      }
+      return value;
+    })
     .required(),
   // id tenanta w API (/api/v1/<tenant>/…)
   tenant: Joi.string()
@@ -43,6 +52,9 @@ const optionsSchema = Joi.object({
     .default(null),
   // sonda GET /status przy pierwszym otwarciu panelu (komunikat dla sieci z allowlistą)
   statusProbe: Joi.boolean().default(true),
+  // linki zewnętrzne w odpowiedzi modelu: "allow" = klikalne (rel=noreferrer), "text" = sam tekst
+  // z widocznym hostem (strony rządowe: indirect prompt injection nie da klikalnego phishingu)
+  externalLinks: Joi.string().valid("allow", "text").default("allow"),
 });
 
 /** klucze sessionStorage per tenant (dwa buildy na jednym originie nie kolidują) */
@@ -63,6 +75,7 @@ module.exports = function themeDocsChat(context, options) {
     enabled: options.enabled,
     selectionActions: options.selectionActions,
     statusProbe: options.statusProbe,
+    externalLinks: options.externalLinks,
     storageKeys: keys,
   };
 
@@ -102,7 +115,7 @@ module.exports = function themeDocsChat(context, options) {
       const scriptLiteral = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
       const captureClientId = options.clientIdQueryParam
         ? `var p=new URLSearchParams(location.search).get(${scriptLiteral(options.clientIdQueryParam)});` +
-          `if(p&&/^[\\x21-\\x7e]{1,128}$/.test(p)){sessionStorage.setItem(${scriptLiteral(keys.clientId)},p);}`
+          `if(p&&/^[A-Za-z0-9_-]{1,64}$/.test(p)){sessionStorage.setItem(${scriptLiteral(keys.clientId)},p);}`
         : "";
       return {
         headTags: [
