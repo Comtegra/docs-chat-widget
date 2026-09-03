@@ -15,6 +15,8 @@ import useIsBrowser from "@docusaurus/useIsBrowser";
 import { streamDocsChat } from "@comtegra/docs-chat-client";
 import { initialThreadState, reduceThread, threadSelectors } from "@comtegra/docs-chat-client";
 import { normalizePanelMode, normalizeScope } from "./lib/preferences.mjs";
+import { createTurnTimers } from "./lib/turnTimers.mjs";
+import { isValidClientId } from "@comtegra/docs-chat-client";
 
 // Klucze sessionStorage per tenant przychodzą z lifecycle'u theme'u (options.storageKeys:
 // { snapshot, clientId }) — ten sam snapshot czyta skrypt pre-hydracji (injectHtmlTags).
@@ -63,7 +65,12 @@ function readClientId(key) {
     return null;
   }
   try {
-    return window.sessionStorage.getItem(key) || null;
+    const value = window.sessionStorage.getItem(key);
+    if (value && isValidClientId(value)) return value;
+    // stara/obca wartość (migawka z 0.1.0, inny skrypt same-origin) — backend by ją odrzucał
+    // przy KAŻDYM pytaniu bez drogi wyjścia w UI; lepiej zgubić atrybucję
+    if (value) window.sessionStorage.removeItem(key);
+    return null;
   } catch (error) {
     return null;
   }
@@ -85,7 +92,6 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
   const isBrowser = useIsBrowser();
   const [panelMode, setPanelMode] = useState(() => (isBrowser ? normalizePanelMode(loadStoredChatState(snapshotKey)?.panelMode) : "collapsed"));
   const controllerRef = useRef(null);
-  const timeoutRef = useRef(null);
   const restoredRef = useRef(false);
   // po odtworzeniu z sessionStorage — dopiero wtedy wolno nadpisywać migawkę
   const [hydrated, setHydrated] = useState(false);
@@ -101,16 +107,11 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
 
   const loading = threadSelectors.loading(thread);
 
-  const turnTimeoutRef = useRef(null);
+  // timery bieżącej tury (nieaktywność + całkowity) — lib/turnTimers.mjs; ref trzyma instancję
+  const timersRef = useRef(null);
   const clearTimer = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    if (turnTimeoutRef.current) {
-      clearTimeout(turnTimeoutRef.current);
-      turnTimeoutRef.current = null;
-    }
+    timersRef.current?.clear();
+    timersRef.current = null;
   };
 
   // odtworzenie z sessionStorage (raz, po montażu — przeładowanie strony lub remont na /search)
@@ -218,27 +219,27 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
         if (isCurrent()) dispatch(event);
       };
 
-      // timeout nieaktywności: zerowany przy każdym chunku; upływ → abort + notice "timeout"
-      const armTimeout = () => {
-        if (!isCurrent()) return;
-        clearTimer();
-        timeoutRef.current = setTimeout(() => {
+      // timeout nieaktywności (zerowany każdym chunkiem) + twardy limit całej tury → abort + notice "timeout"
+      clearTimer();
+      const timers = createTurnTimers({
+        inactivityMs: REQUEST_TIMEOUT_MS,
+        turnMs: TURN_TIMEOUT_MS,
+        onTimeout: () => {
           if (controllerRef.current !== controller) return;
           controllerRef.current = null;
           controller.abort();
           dispatch({ type: "abort", reason: "timeout", at: Date.now() });
-        }, REQUEST_TIMEOUT_MS);
+        },
+      });
+      timersRef.current = timers;
+      const armTimeout = () => {
+        if (!isCurrent()) return;
+        timers.activity();
       };
 
       const startedAt = Date.now();
       dispatch({ type: "start", id: `turn-${startedAt}`, prompt: trimmedPrompt, scope: targetScope, at: startedAt });
-      armTimeout();
-      turnTimeoutRef.current = setTimeout(() => {
-        if (controllerRef.current !== controller) return;
-        controllerRef.current = null;
-        controller.abort();
-        dispatch({ type: "abort", reason: "timeout", at: Date.now() });
-      }, TURN_TIMEOUT_MS);
+      timers.start();
 
       try {
         const client = readClientId(clientIdKey);

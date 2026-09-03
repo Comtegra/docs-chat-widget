@@ -50,6 +50,15 @@ test("citedSourceNumbers: unique, in order of first appearance", () => {
 
 // --- sse ----------------------------------------------------------------------------------------
 
+test("sse parser: cap dotyczy niedokończonej linii — wiele kompletnych ramek w jednym chunku przechodzi", () => {
+  const parse = createSseParser();
+  const frames = Array.from({ length: 20000 }, (_, i) => `data: {"type":"content","content":"${"x".repeat(50)}${i}"}`).join("\n") + "\n";
+  assert.ok(frames.length > 1_000_000);
+  assert.equal(parse(frames).length, 20000);
+  assert.throws(() => parse("data: " + "y".repeat(1_000_001)), /size limit/);
+  assert.deepEqual(parse('data: {"type":"done","traceId":"t"}\n'), [{ type: "done", traceId: "t" }]); // po błędzie parser działa dalej
+});
+
 test("sse parser: line-based, buffers split frames, skips broken JSON and non-data lines", () => {
   const parse = createSseParser();
   assert.deepEqual(parse('data: {"type":"step","id":"retrieve","status":"running"}\n\ndata: {"type":"con'), [

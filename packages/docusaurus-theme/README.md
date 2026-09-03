@@ -77,6 +77,8 @@ do builda. Stan rozmowy żyje w `sessionStorage` pod kluczami `docs-chat:<tenant
   strony dokumentacji, opcjonalnie `client` (id wdrożenia z `?r=`), przy ocenie odpowiedzi
   `traceId` + `±1`. Bez cookies, bez identyfikatora użytkownika, `fetch` bez `credentials`.
   Rozmowa żyje w `sessionStorage` karty (bez toku rozumowania modelu).
+- **Linki zewnętrzne:** `externalLinks: "text"` dotyczy odpowiedzi modelu (http/https/mailto);
+  karty źródeł (`ContextCards`) pokazują `url` z serwera bez zmian — serwer jest zaufany.
 - **Renderowanie:** odpowiedź to markdown bez surowego HTML (react-markdown bez rehype-raw),
   linki sanityzowane (`javascript:`/`data:`/protocol-relative odrzucane), obrazki zamieniane
   na tekst alternatywny, cytowania tylko do kart źródeł.

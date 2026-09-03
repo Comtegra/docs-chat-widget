@@ -6,6 +6,7 @@ import { createRequire } from "node:module";
 import { Joi } from "@docusaurus/utils-validation";
 
 import { PANEL_MODES } from "../src/DocsChat/lib/preferences.mjs";
+import { CLIENT_ID_PATTERN } from "@comtegra/docs-chat-client";
 
 const require = createRequire(import.meta.url);
 const themeDocsChat = require("../src/index.js");
@@ -51,6 +52,8 @@ test("skrypt pre-hydracyjny zna każdy tryb panelu poza collapsed i nie zawiera 
   assert.ok(script.includes("docs-chat:ezd:v2"));
   assert.ok(script.includes("docs-chat:ezd:client"));
   assert.ok(!script.includes("</"), "sekwencja '</' w inline script może zamknąć tag");
+  // jedno źródło wzorca id wdrożenia: literał w skrypcie == CLIENT_ID_PATTERN klienta
+  assert.ok(script.includes(`/${CLIENT_ID_PATTERN.source}/`), "regex ?r= w skrypcie rozjechał się z CLIENT_ID_PATTERN");
 });
 
 test("enabled: false wyłącza headTags", () => {

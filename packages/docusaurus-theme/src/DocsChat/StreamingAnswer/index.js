@@ -67,7 +67,7 @@ export function buildMarkdownComponents({ turnId, sources, copy, settled = true,
         }
         return (
           <span {...props}>
-            {children} <span aria-hidden="true">({target})</span>
+            {children} <span>({target})</span>
           </span>
         );
       }

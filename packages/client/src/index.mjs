@@ -23,3 +23,4 @@ export {
   sourceCardId,
 } from "./citations.mjs";
 export { sanitizeMarkdownHref } from "./safeHref.mjs";
+export { CLIENT_ID_PATTERN, isValidClientId } from "./clientId.mjs";
