@@ -1,5 +1,11 @@
 # @comtegra/docs-chat-client
 
+## 0.2.1
+
+### Patch Changes
+
+- 06e5eee: Schemat ramki `done`: opcjonalne pole `aiGenerated` (oznaczenie AI Act z gatewaya LLM, addytywne).
+
 ## 0.2.0
 
 ### Minor Changes
