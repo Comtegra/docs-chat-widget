@@ -5,28 +5,50 @@
 import { createSseParser } from "./sse.mjs";
 
 /**
+ * Nagłówek z tokenem strony: tenant dokumentacji niepublicznej (np. podręcznik za firewallem klienta)
+ * wymaga go dla czatu i feedbacku — bez/zły token = HTTP 401 (a nie ramka `error`). Token jest wspólny
+ * dla całej strony (wypiekany w build), nie sekretem użytkownika.
+ */
+export const SITE_TOKEN_HEADER = "X-Site-Token";
+
+/**
+ * Odpowiedź HTTP bez strumienia (4xx/5xx albo brak body): `status` pozwala rozróżnić 401/403
+ * (token strony) od reszty i pokazać użytkownikowi właściwy komunikat.
+ */
+export class DocsChatRequestError extends Error {
+  /** @param {number} status */
+  constructor(status) {
+    super(`Docs chat request failed (${status})`);
+    this.name = "DocsChatRequestError";
+    this.status = status;
+  }
+}
+
+/**
  * @param {{
  *   apiUrl: string,
  *   body: unknown,
  *   signal: AbortSignal,
  *   onEvent: (event: any) => void,       // ramki + `error`/`done` z `at`
  *   onActivity?: () => void,             // każdy chunk odpowiedzi (zerowanie timeoutu)
+ *   headers?: Record<string, string>,    // nagłówki własne (np. { [SITE_TOKEN_HEADER]: token }); Content-Type zawsze JSON
  *   fetchImpl?: typeof fetch,
  *   now?: () => number,
  * }} options
- * @returns {Promise<void>}  rozwiązuje po `done`/`error`; rzuca przy błędzie HTTP/sieci (nie przy abort)
+ * @returns {Promise<void>}  rozwiązuje po `done`/`error`; rzuca przy błędzie HTTP/sieci (nie przy abort):
+ *   DocsChatRequestError (z `status`) dla odpowiedzi bez strumienia, błąd fetch dla sieci
  */
-export async function streamDocsChat({ apiUrl, body, signal, onEvent, onActivity = () => {}, fetchImpl = fetch, now = Date.now }) {
+export async function streamDocsChat({ apiUrl, body, signal, onEvent, onActivity = () => {}, headers = {}, fetchImpl = fetch, now = Date.now }) {
   const response = await fetchImpl(apiUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { ...headers, "Content-Type": "application/json" },
     body: JSON.stringify(body),
     signal,
   });
   onActivity();
 
   if (!response.ok || !response.body) {
-    throw new Error(`Docs chat request failed (${response.status})`);
+    throw new DocsChatRequestError(response.status);
   }
 
   const reader = response.body.getReader();

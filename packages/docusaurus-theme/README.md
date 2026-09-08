@@ -48,6 +48,7 @@ export default {
 | `clientIdQueryParam` | string \| null | `null` | Parametr URL z id wdrożenia (np. `"r"` → `?r=urzad-x`); wartość musi pasować do `^[A-Za-z0-9_-]{1,64}$` (base64url), inna jest ignorowana; utrwalana w sessionStorage i dołączana do żądań jako `client` (atrybucja per instalacja, nie auth). |
 | `externalLinks` | `"allow"` \| `"text"` | `"allow"` | Linki spoza strony w odpowiedzi modelu: klikalne (`rel=noreferrer`) albo sam tekst z hostem. Dla stron publicznych/rządowych zalecane `"text"` — treść indeksu może próbować podsunąć link. |
 | `statusProbe` | boolean | `true` | Przy pierwszym otwarciu panelu `GET /status` (timeout 3 s); gdy API jest odcięte (sieci z allowlistą), użytkownik dostaje komunikat z adresem do odblokowania zamiast wiecznego spinnera. |
+| `siteToken` | string \| null | `null` | Token strony dla tenanta dokumentacji **niepublicznej**: wysyłany w nagłówku `X-Site-Token` z czatem i feedbackiem (API bez niego odpowiada 401 → komunikat „brak dostępu”). Wypiekany w build (podaj z sekretu workflow przez env), więc widoczny w JS strony — chroni treść przed skryptami spoza strony, nie jest sekretem użytkownika. Drukowalne ASCII, 16–512 znaków. |
 
 ## Tłumaczenia
 

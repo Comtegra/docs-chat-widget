@@ -7,7 +7,7 @@
 //
 // Kształt stanu jest PRZYPIĘTY (kontrakt między repo):
 //   status  idle | running | done | stopped | error
-//   notice  null | unsafe | pricing | rate_limited | no_context | timeout | error
+//   notice  null | unsafe | pricing | rate_limited | no_context | unauthorized | timeout | error
 //   traceId null | string (z ramki `done`; klucz feedbacku)
 //   steps   [{ id, status: running|done|failed, meta? }] w kolejności pojawienia
 //   sources [] (kształt zależny od źródła: docs — SseSource; web — obiekty /api/vdb/query)
@@ -17,15 +17,16 @@
 // Zdarzenia = ramki SSE (`sources`, `step`, `reasoning`, `content`, `done`, `error`) +
 //   { type: "start", prompt }                    — nowe pytanie (reset)
 //   { type: "abort", reason: "stopped"|"timeout" } — Stop użytkownika / brak aktywności
-// `error.code` obejmuje kody serwera (invalid_request | rate_limited | no_context | llm_error)
-// i klienckie (unsafe | pricing — klasyfikatory site-chatu; nie są błędami: status "done").
+// `error.code` obejmuje kody serwera (invalid_request | rate_limited | no_context | llm_error),
+// klienckie (unsafe | pricing — klasyfikatory site-chatu; nie są błędami: status "done")
+// i transportowe (unauthorized — HTTP 401/403 zamiast strumienia: brak/zły token strony).
 //
 // Reguły: przy `error`/`abort` ostatni krok „running" → „failed" (serwer docs też to wysyła
 // — reducer jest tu defensywny, żeby web z krokami klienckimi zachowywał się tak samo);
 // `sources` NIE jest tworzone na nowo przy ramkach `content` (tożsamość dla React.memo).
 
 /** @typedef {"idle"|"running"|"done"|"stopped"|"error"} ConversationStatus */
-/** @typedef {null|"unsafe"|"pricing"|"rate_limited"|"no_context"|"timeout"|"error"} ConversationNotice */
+/** @typedef {null|"unsafe"|"pricing"|"rate_limited"|"no_context"|"unauthorized"|"timeout"|"error"} ConversationNotice */
 /** @typedef {{ id: string, status: "running"|"done"|"failed", meta?: Record<string, unknown> }} ConversationStep */
 /**
  * @typedef {{
@@ -72,6 +73,7 @@ export function noticeForErrorCode(code) {
     case "pricing":
     case "rate_limited":
     case "no_context":
+    case "unauthorized":
       return code;
     default:
       // `timeout` nie jest kodem błędu serwera — to zdarzenie `abort{reason:"timeout"}`

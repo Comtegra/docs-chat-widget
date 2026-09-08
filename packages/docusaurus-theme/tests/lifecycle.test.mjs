@@ -70,3 +70,16 @@ test("tłumaczenia: pl i fallback pl-PL → pl.json, nieznany locale → {}", ()
   assert.deepEqual(makeTheme({}, "pl-PL").getDefaultCodeTranslationMessages(), pl);
   assert.deepEqual(makeTheme({}, "de").getDefaultCodeTranslationMessages(), {});
 });
+
+test("siteToken: opcjonalny; drukowalne ASCII 16–512 bez spacji/CRLF; trafia do global data, nie do inline <script>", () => {
+  assert.equal(validateOptions({ options: baseOptions, validate }).siteToken, null);
+  assert.throws(() => validateOptions({ options: { ...baseOptions, siteToken: "short" }, validate }));
+  assert.throws(() => validateOptions({ options: { ...baseOptions, siteToken: "with space is not ok!!" }, validate }));
+  assert.throws(() => validateOptions({ options: { ...baseOptions, siteToken: "abcdefghijklmnop\r\nX-Evil: 1" }, validate }));
+  const token = "a".repeat(64);
+  assert.equal(validateOptions({ options: { ...baseOptions, siteToken: token }, validate }).siteToken, token);
+  let captured = null;
+  makeTheme({ siteToken: token }).contentLoaded({ actions: { setGlobalData: (data) => (captured = data) } });
+  assert.equal(captured.siteToken, token);
+  assert.ok(!makeTheme({ siteToken: token, clientIdQueryParam: "r" }).injectHtmlTags().headTags[0].innerHTML.includes(token));
+});

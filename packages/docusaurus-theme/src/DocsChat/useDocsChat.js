@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import useIsBrowser from "@docusaurus/useIsBrowser";
 
-import { streamDocsChat } from "@comtegra/docs-chat-client";
+import { DocsChatRequestError, SITE_TOKEN_HEADER, streamDocsChat } from "@comtegra/docs-chat-client";
 import { initialThreadState, reduceThread, threadSelectors } from "@comtegra/docs-chat-client";
 import { normalizePanelMode, normalizeScope } from "./lib/preferences.mjs";
 import { createTurnTimers } from "./lib/turnTimers.mjs";
@@ -77,11 +77,14 @@ function readClientId(key) {
 }
 
 /**
- * @param {{ apiUrl: string, feedbackUrl?: string, statusUrl?: string|null, locale: string, page: { permalink: string }, storageKeys?: { snapshot: string, clientId: string } }} options
+ * @param {{ apiUrl: string, feedbackUrl?: string, statusUrl?: string|null, locale: string, page: { permalink: string }, storageKeys?: { snapshot: string, clientId: string }, siteToken?: string|null }} options
+ *   `siteToken` — token strony tenanta niepublicznego (nagłówek X-Site-Token w czacie i feedbacku)
  */
-export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, page, storageKeys }) {
+export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, page, storageKeys, siteToken = null }) {
   const snapshotKey = storageKeys?.snapshot;
   const clientIdKey = storageKeys?.clientId;
+  // nagłówki auth dla czatu i feedbacku; sonda /status jest publiczna (bez tokena, bez preflightu)
+  const authHeaders = siteToken ? { [SITE_TOKEN_HEADER]: siteToken } : {};
   const [thread, dispatch] = useReducer(reduceThread, initialThreadState);
   // SSR i pierwszy render klienta zawsze z domyślnymi wartościami (brak niezgodności hydratacji);
   // odtworzenie z sessionStorage w efekcie po montażu
@@ -249,6 +252,7 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
           signal,
           onEvent: emit,
           onActivity: armTimeout,
+          headers: authHeaders,
         });
         if (isCurrent()) setBackendStatus("ok"); // udany strumień = API osiągalne (sonda mogła spaść na cold-starcie)
       } catch (error) {
@@ -257,7 +261,10 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
           return;
         }
         console.error("Docs chat error:", error);
-        emit({ type: "error", code: "llm_error", at: Date.now() });
+        // 401/403 = brak/zły token strony (build bez EDORADCA_SITE_TOKEN, token zrotowany) — osobny
+        // komunikat, żeby administrator nie szukał awarii modelu
+        const unauthorized = error instanceof DocsChatRequestError && (error.status === 401 || error.status === 403);
+        emit({ type: "error", code: unauthorized ? "unauthorized" : "llm_error", at: Date.now() });
       } finally {
         // timer tylko dla bieżącego żądania — nowszego nie wolno rozbroić
         if (controllerRef.current === controller) {
@@ -266,7 +273,8 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
         }
       }
     },
-    [apiUrl, locale, page, clientIdKey]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [apiUrl, locale, page, clientIdKey, siteToken]
   );
 
   // Feedback (kciuk w górę / w dół) → cgc-web /api/chat/feedback po `traceId` z ramki `done`.
@@ -279,7 +287,7 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
       try {
         const response = await fetch(feedbackUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { ...authHeaders, "Content-Type": "application/json" },
           body: JSON.stringify({ traceId, value }),
         });
         const payload = response.ok ? await response.json().catch(() => ({})) : {};
@@ -292,7 +300,8 @@ export default function useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, pa
         setFeedbackByTrace((current) => ({ ...current, [traceId]: { value, pending: false, stored: false } }));
       }
     },
-    [feedbackUrl]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [feedbackUrl, siteToken]
   );
 
   const clearConversation = useCallback(() => {
