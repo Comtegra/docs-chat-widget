@@ -55,7 +55,7 @@ export default function DocsChat({ options, permalink }) {
   const pageAvailable = typeof permalink === "string" && permalink.length > 0;
   const page = useMemo(() => (pageAvailable ? { permalink } : null), [pageAvailable, permalink]);
 
-  const chat = useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, page, storageKeys: options.storageKeys });
+  const chat = useDocsChat({ apiUrl, feedbackUrl, statusUrl, locale, page, storageKeys: options.storageKeys, siteToken: options.siteToken });
   const {
     turns,
     loading,

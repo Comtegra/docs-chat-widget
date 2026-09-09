@@ -116,6 +116,7 @@ export function MarkdownAnswer({ content, streaming = false, components, turnId 
 export function errorMessageFor(copy, notice, scope = "all") {
   if (!notice) return null;
   if (notice === "rate_limited") return copy.rateLimited;
+  if (notice === "unauthorized") return copy.unauthorized;
   if (notice === "no_context") return scope === "page" ? copy.noContext : copy.noContextAll;
   if (notice === "timeout") return copy.timeoutError;
   // kontrakt: unsafe/pricing kończą turę statusem done (to nie błędy) — treść z backendu

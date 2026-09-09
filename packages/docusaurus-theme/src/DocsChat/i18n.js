@@ -32,6 +32,11 @@ export function getCopy({ assistantName, examplePrompts = [] }) {
     }),
     noContext: translate({ id: "docsChat.error.noContext", message: "No relevant answer was found on this page." }),
     genericError: translate({ id: "docsChat.error.generic", message: "The assistant could not answer right now." }),
+    unauthorized: translate({
+      id: "docsChat.error.unauthorized",
+      message: "This copy of the documentation is not authorized to use the assistant. Reload the page or contact your administrator.",
+      description: "HTTP 401/403 from the chat API: the site token baked into the build is missing or was rotated",
+    }),
     timeoutError: translate({ id: "docsChat.error.timeout", message: "The assistant took too long to respond. Please try again." }),
     open: translate({ id: "docsChat.open", message: "{assistantName}" }),
     minimize: translate({ id: "docsChat.minimize", message: "Minimize" }),

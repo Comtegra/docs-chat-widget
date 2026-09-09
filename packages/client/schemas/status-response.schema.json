@@ -11,6 +11,12 @@
     "model": { "type": "string" },
     "locales": { "type": "array", "items": { "type": "string" } },
     "observability": { "type": "boolean" },
+    "auth": {
+      "type": "object",
+      "description": "Dostęp do czatu/feedbacku tenanta: siteToken=true → nagłówek X-Site-Token obowiązkowy (401 bez niego). Pole addytywne — starsze serwisy go nie wysyłają.",
+      "required": ["siteToken"],
+      "properties": { "siteToken": { "type": "boolean" } }
+    },
     "index": {
       "type": "array",
       "items": {

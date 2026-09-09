@@ -14,6 +14,7 @@
   "docsChat.error.rateLimited": "Za dużo zapytań. Spróbuj ponownie później.",
   "docsChat.error.noContext": "Na tej stronie nie znaleziono wystarczającego kontekstu.",
   "docsChat.error.generic": "Asystent nie może teraz odpowiedzieć.",
+  "docsChat.error.unauthorized": "Ta wersja podręcznika nie ma dostępu do asystenta. Odśwież stronę lub skontaktuj się z administratorem.",
   "docsChat.error.timeout": "Asystent zbyt długo nie odpowiadał. Spróbuj ponownie.",
   "docsChat.open": "{assistantName}",
   "docsChat.minimize": "Zwiń",

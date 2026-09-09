@@ -19,6 +19,25 @@ zawsze kończy `done` albo `error` — ucięty strumień traktuj jak błąd (tra
 ciebie). Schematy: `schemas/*.schema.json` (JSON Schema 2020-12) — te same pliki konsumują
 testy kontraktowe backendu.
 
+## Token strony (dokumentacja niepubliczna)
+
+Tenant, którego dokumentacja nie jest publiczna, wymaga w czacie i feedbacku nagłówka
+`X-Site-Token` (`GET /status` → `auth.siteToken: true`). Token jest wspólny dla całej
+strony (wypiekany w build), nie sekretem użytkownika — chroni treść przed skryptami spoza
+strony, nie zastępuje limitów. Bez/zły token = HTTP 401 zamiast strumienia; transport rzuca
+wtedy `DocsChatRequestError` ze `status`, a reducer zna notice `unauthorized`:
+
+```js
+import { streamDocsChat, SITE_TOKEN_HEADER, DocsChatRequestError, noticeForErrorCode } from "@comtegra/docs-chat-client";
+
+try {
+  await streamDocsChat({ apiUrl, body, signal, onEvent, headers: { [SITE_TOKEN_HEADER]: token } });
+} catch (error) {
+  const code = error instanceof DocsChatRequestError && (error.status === 401 || error.status === 403) ? "unauthorized" : "llm_error";
+  onEvent({ type: "error", code, at: Date.now() }); // noticeForErrorCode(code) → "unauthorized" | "error"
+}
+```
+
 ## Użycie bez bundlera (np. Angular.js)
 
 Tarball zawiera build IIFE (`dist/docs-chat-client.iife.min.js`) z globalem

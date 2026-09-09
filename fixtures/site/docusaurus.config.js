@@ -34,6 +34,8 @@ module.exports = {
         assistantName: "e-Doradca",
         examplePrompts: ["Jak założyć sprawę?", "Jak dodać załącznik?"],
         clientIdQueryParam: "r",
+        // tenant niepubliczny: token strony z env buildu (fixture: opcjonalny)
+        siteToken: process.env.FIXTURE_SITE_TOKEN || null,
       },
     ],
   ],

@@ -55,6 +55,14 @@ const optionsSchema = Joi.object({
   // linki zewnętrzne w odpowiedzi modelu: "allow" = klikalne (rel=noreferrer), "text" = sam tekst
   // z widocznym hostem (strony rządowe: indirect prompt injection nie da klikalnego phishingu)
   externalLinks: Joi.string().valid("allow", "text").default("allow"),
+  // token strony dla tenanta dokumentacji NIEPUBLICZNEJ: wysyłany w nagłówku X-Site-Token z czatem
+  // i feedbackiem (API bez niego odpowiada 401). Wypiekany w build (env w workflow), więc widoczny
+  // w JS strony — chroni treść przed skryptami spoza strony, nie jest sekretem użytkownika.
+  // Wartość nagłówka: drukowalne ASCII bez spacji (CR/LF = wstrzyknięcie nagłówka)
+  siteToken: Joi.string()
+    .pattern(/^[\x21-\x7e]{16,512}$/)
+    .allow(null)
+    .default(null),
 });
 
 /** klucze sessionStorage per tenant (dwa buildy na jednym originie nie kolidują) */
@@ -76,6 +84,7 @@ module.exports = function themeDocsChat(context, options) {
     selectionActions: options.selectionActions,
     statusProbe: options.statusProbe,
     externalLinks: options.externalLinks,
+    siteToken: options.siteToken,
     storageKeys: keys,
   };
 
