@@ -8,7 +8,7 @@
     "start": "docusaurus start"
   },
   "dependencies": {
-    "@comtegra/docusaurus-theme-docs-chat": "^0.2.0",
+    "@comtegra/docusaurus-theme-docs-chat": "^0.3.0",
     "@docusaurus/core": "^3.10.0",
     "@docusaurus/faster": "^3.10.0",
     "@docusaurus/preset-classic": "^3.10.0",
