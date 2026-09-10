@@ -285,7 +285,7 @@ export default function DocsChat({ options, permalink }) {
 
   return (
     <>
-      {mounted && <NavbarEntry open={isPanelOpen} onOpen={openPanel} onCollapse={collapsePanel} copy={copy} resetKey={permalink} />}
+      {mounted && <NavbarEntry open={isPanelOpen} onOpen={openPanel} onCollapse={collapsePanel} copy={copy} />}
       {!isPanelOpen && (
         <button
           ref={launcherRef}

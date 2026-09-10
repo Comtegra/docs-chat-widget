@@ -11,3 +11,23 @@ export function isOpenShortcut(event) {
   if (!(event.ctrlKey || event.metaKey) || event.altKey) return false;
   return event.key === "/";
 }
+
+/**
+ * Platforma z `navigator`: Chromium podaje `userAgentData.platform` („macOS", „Windows", „Linux",
+ * „Android"), pozostałe przeglądarki tylko `navigator.platform` („MacIntel", „Win32", „iPhone").
+ * @param {{ userAgentData?: { platform?: string }, platform?: string } | null | undefined} [nav]
+ */
+export function detectPlatform(nav = typeof navigator !== "undefined" ? navigator : undefined) {
+  if (!nav) return "";
+  return nav.userAgentData?.platform || nav.platform || "";
+}
+
+/**
+ * Apple = skrót z ⌘. Bez względu na wielkość liter: Chromium daje „macOS", Safari/Firefox „MacIntel",
+ * iPad na iPadOS 13+ też „MacIntel". Case-sensitive /Mac/ nie łapało „macOS" i na macOS w Chrome/Edge/Brave
+ * podpowiedź pokazywała Ctrl+/ (zgłoszenie e-Instytucji).
+ * @param {string | undefined} platform
+ */
+export function isApplePlatform(platform) {
+  return /mac|iphone|ipad/i.test(platform || "");
+}
