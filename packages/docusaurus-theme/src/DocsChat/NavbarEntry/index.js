@@ -1,7 +1,7 @@
-// Wejście do Ask CGC w navbarze (E6): navbar.items ma pusty slot `type: "html"`
-// (`<span class="docs-chat-navbar-slot">`); TU renderujemy do niego portalem przycisk — bez
-// swizzle'owania Navbara, z i18n, aria-expanded/aria-controls i podpowiedzią skrótu.
-// Przycisk to disclosure (aria-expanded): klik PRZEŁĄCZA — otwiera zwinięty panel, zwija otwarty.
+// Wejście do czatu w navbarze: navbar.items ma element `type: "custom-docsChat"` (theme/NavbarItem/
+// ComponentTypes), który renderuje pusty slot `<span class="docs-chat-navbar-slot">`; TU renderujemy do
+// niego portalem przycisk — bez swizzle'owania Navbara, z i18n, aria-expanded/aria-controls i podpowiedzią
+// skrótu. Przycisk to disclosure (aria-expanded): klik PRZEŁĄCZA — otwiera zwinięty panel, zwija otwarty.
 // Skrót klawiszowy Ctrl+/ (⌘+/ na macOS) tylko otwiera / przenosi fokus na composer (zamyka
 // Escape); nie koliduje z Ctrl+K wyszukiwarki ani ze skrótami przeglądarek. Na mobile navbar chowa
 // elementy do menu — wtedy wejściem jest launcher w rogu (DocsChat), a slot jest niewidoczny.
@@ -9,24 +9,33 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import styles from "../styles.module.css";
 import { ChatBubbleIcon } from "../icons";
-import { isOpenShortcut } from "../lib/shortcut.mjs";
+import { detectPlatform, isApplePlatform, isOpenShortcut } from "../lib/shortcut.mjs";
 
 export const NAVBAR_SLOT_SELECTOR = ".navbar__items--right .docs-chat-navbar-slot";
 export const NAVBAR_BUTTON_ID = "docs-chat-navbar-open";
 
 /**
- * @param {{ open: boolean, onOpen: () => void, onCollapse: () => void, copy: any, resetKey?: string|null }} props
+ * @param {{ open: boolean, onOpen: () => void, onCollapse: () => void, copy: any }} props
  */
-export default function NavbarEntry({ open, onOpen, onCollapse, copy, resetKey }) {
+export default function NavbarEntry({ open, onOpen, onCollapse, copy }) {
   const [slot, setSlot] = useState(/** @type {Element|null} */ (null));
 
-  // slot żyje w Navbarze (trwałym między trasami). Efekt idzie przy zmianie slotu lub trasy
-  // (`resetKey`): tanie `isConnected`, zapytanie DOM tylko, gdy slotu nie ma lub został odłączony.
+  // Navbar NIE jest trwały między trasami: każdy typ strony (docs, strona główna, strony z src/pages)
+  // renderuje własny <Layout>, więc przejście między typami montuje navbar od nowa i slot dostaje nowy
+  // węzeł. Efekt zależny od trasy tego nie łapie: Docusaurus zmienia lokalizację (i permalink) PRZED
+  // doładowaniem chunka nowej strony, więc taki efekt widział jeszcze stary, podłączony slot, a przycisk
+  // zostawał w węźle, który za chwilę wypadał z DOM (zgłoszenie e-Instytucji). Dlatego obserwator
+  // mutacji na drzewie aplikacji: gdy bieżący slot został odłączony, szukamy nowego i przepinamy portal.
+  // Panel to portal do <body>, więc strumień odpowiedzi nie budzi obserwatora; przy podłączonym slocie
+  // updater zwraca ten sam stan i React nie renderuje ponownie.
   useEffect(() => {
-    if (slot && slot.isConnected) return;
-    const found = document.querySelector(NAVBAR_SLOT_SELECTOR);
-    if (found !== slot) setSlot(found);
-  }, [slot, resetKey]);
+    const sync = () =>
+      setSlot((current) => (current && current.isConnected ? current : document.querySelector(NAVBAR_SLOT_SELECTOR)));
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(document.getElementById("__docusaurus") || document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     /** @param {KeyboardEvent} event */
@@ -40,8 +49,7 @@ export default function NavbarEntry({ open, onOpen, onCollapse, copy, resetKey }
   }, [onOpen]);
 
   if (!slot) return null;
-  const platform = typeof navigator !== "undefined" ? navigator.userAgentData?.platform || navigator.platform || "" : "";
-  const isMac = /Mac|iPhone|iPad/.test(platform);
+  const isMac = isApplePlatform(detectPlatform());
   return createPortal(
     <button
       id={NAVBAR_BUTTON_ID}

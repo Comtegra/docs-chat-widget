@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { formatSeconds } from "../src/DocsChat/lib/format.mjs";
-import { isOpenShortcut } from "../src/DocsChat/lib/shortcut.mjs";
+import { detectPlatform, isApplePlatform, isOpenShortcut } from "../src/DocsChat/lib/shortcut.mjs";
 import { PANEL_MODES, SCOPES, normalizePanelMode, normalizeScope } from "../src/DocsChat/lib/preferences.mjs";
 import {
   SELECTION_MAX_CHARS,
@@ -111,4 +111,20 @@ test("normalizePanelMode: only known modes from the (untrusted) snapshot; anythi
   assert.deepEqual([...SCOPES], ["page", "all"]);
   for (const scope of SCOPES) assert.equal(normalizeScope(scope), scope);
   for (const bad of [undefined, null, "", "site", "PAGE", 0, []]) assert.equal(normalizeScope(bad), "all");
+});
+
+test("isApplePlatform: macOS z userAgentData (Chromium) i MacIntel/iPhone/iPad z navigator.platform; reszta → Ctrl", () => {
+  for (const platform of ["macOS", "MacIntel", "iPhone", "iPad"]) assert.equal(isApplePlatform(platform), true, platform);
+  for (const platform of ["Windows", "Win32", "Linux", "Linux x86_64", "Android", "Chrome OS", ""]) {
+    assert.equal(isApplePlatform(platform), false, platform);
+  }
+  assert.equal(isApplePlatform(undefined), false);
+});
+
+test("detectPlatform: userAgentData.platform przed navigator.platform; brak navigatora → pusty string", () => {
+  assert.equal(detectPlatform({ userAgentData: { platform: "macOS" }, platform: "MacIntel" }), "macOS");
+  assert.equal(detectPlatform({ platform: "MacIntel" }), "MacIntel");
+  assert.equal(detectPlatform({ userAgentData: {}, platform: "Win32" }), "Win32");
+  assert.equal(detectPlatform({}), "");
+  assert.equal(detectPlatform(null), ""); // undefined = parametr domyślny (globalny navigator, w Node 21+ istnieje)
 });
