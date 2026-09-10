@@ -1,6 +1,6 @@
 {
   "name": "@comtegra/docusaurus-theme-docs-chat",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Docs assistant chat widget as a Docusaurus 3 theme (docs-chat API, SSE)",
   "license": "Apache-2.0",
   "sideEffects": [
