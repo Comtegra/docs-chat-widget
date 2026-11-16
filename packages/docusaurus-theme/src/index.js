@@ -32,10 +32,12 @@ const optionsSchema = Joi.object({
       return value;
     })
     .required(),
-  // id tenanta w API (/api/v1/<tenant>/…)
+  // id tenanta w API wielotenantowym (/api/v1/<tenant>/…, kontrakt v1). Brak (null) = API
+  // jednoinstancyjne docs-chat-api v2: trasy /api/v1/chat|feedback|status bez tenanta w ścieżce
   tenant: Joi.string()
     .pattern(/^[a-z0-9][a-z0-9-]{1,31}$/)
-    .required(),
+    .allow(null)
+    .default(null),
   // nazwa asystenta: tytuł panelu i przycisk w navbarze (mianownik, np. "e-Doradca")
   assistantName: Joi.string().max(60).required(),
   // 3 podpowiedzi w pustym panelu (mniej/więcej też zadziała)
@@ -67,16 +69,24 @@ const optionsSchema = Joi.object({
 
 /** klucze sessionStorage per tenant (dwa buildy na jednym originie nie kolidują) */
 function storageKeys(tenant) {
+  const scope = tenant || "default";
   return {
-    snapshot: `docs-chat:${tenant}:v2`,
-    clientId: `docs-chat:${tenant}:client`,
+    snapshot: `docs-chat:${scope}:v2`,
+    clientId: `docs-chat:${scope}:client`,
   };
+}
+
+/** prefiks tras API: /api/v1/<tenant> (v1, wielotenantowe) albo /api/v1 (v2, instancja = tenant) */
+function apiPrefix(apiBaseUrl, tenant) {
+  const base = apiBaseUrl.replace(/\/+$/, "");
+  return tenant ? `${base}/api/v1/${tenant}` : `${base}/api/v1`;
 }
 
 module.exports = function themeDocsChat(context, options) {
   const keys = storageKeys(options.tenant);
   const publicOptions = {
     apiBaseUrl: options.apiBaseUrl.replace(/\/+$/, ""),
+    apiPrefix: apiPrefix(options.apiBaseUrl, options.tenant),
     tenant: options.tenant,
     assistantName: options.assistantName,
     examplePrompts: options.examplePrompts,
