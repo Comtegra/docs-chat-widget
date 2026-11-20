@@ -45,6 +45,20 @@ test("setGlobalData: klucze storage per tenant, apiBaseUrl bez końcowego slasha
   assert.equal(captured.assistantName, "e-Doradca");
 });
 
+test("setGlobalData: apiPrefix z tenantem (v1) i bez tenanta (docs-chat-api v2)", () => {
+  let withTenant = null;
+  makeTheme().contentLoaded({ actions: { setGlobalData: (data) => (withTenant = data) } });
+  assert.equal(withTenant.apiPrefix, "https://ask.example.com/api/v1/ezd");
+
+  const { tenant, ...noTenant } = baseOptions;
+  const validated = validateOptions({ options: noTenant, validate });
+  assert.equal(validated.tenant, null);
+  let v2 = null;
+  themeDocsChat({ i18n: { currentLocale: "pl" } }, validated).contentLoaded({ actions: { setGlobalData: (data) => (v2 = data) } });
+  assert.equal(v2.apiPrefix, "https://ask.example.com/api/v1");
+  assert.deepEqual(v2.storageKeys, { snapshot: "docs-chat:default:v2", clientId: "docs-chat:default:client" });
+});
+
 test("skrypt pre-hydracyjny zna każdy tryb panelu poza collapsed i nie zawiera '</'", () => {
   const { headTags } = makeTheme({ clientIdQueryParam: "r" }).injectHtmlTags();
   const script = headTags[0].innerHTML;

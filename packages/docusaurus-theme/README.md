@@ -39,8 +39,8 @@ export default {
 
 | Opcja | Typ | Domyślnie | Opis |
 | --- | --- | --- | --- |
-| `apiBaseUrl` | string (URL) | **wymagane** | Origin API docs-chat, bez ścieżki; widget woła `/api/v1/<tenant>/chat\|feedback\|status`. |
-| `tenant` | string | **wymagane** | Id tenanta w API (`^[a-z0-9][a-z0-9-]{1,31}$`). |
+| `apiBaseUrl` | string (URL) | **wymagane** | Origin API docs-chat, bez ścieżki; widget woła `/api/v1/chat\|feedback\|status` (z `tenant`: `/api/v1/<tenant>/…`). |
+| `tenant` | string \| null | `null` | Id tenanta w API wielotenantowym v1 (`^[a-z0-9][a-z0-9-]{1,31}$`). Pomiń dla [docs-chat-api](https://github.com/Comtegra/docs-chat-api) v2 — jedna instancja = jedna dokumentacja, trasy bez tenanta. |
 | `assistantName` | string | **wymagane** | Nazwa asystenta (mianownik) — tytuł panelu i etykieta przycisku. |
 | `examplePrompts` | string[] (≤5) | `[]` | Podpowiedzi startowe w pustym panelu, w języku strony. |
 | `enabled` | boolean | `true` | Wyłącznik całego widgetu (build-time). |
@@ -69,7 +69,7 @@ przycisk nie trafiają na wydruk.
 ## Wymagania
 
 Docusaurus `^3.10` z `theme-classic` i `plugin-content-docs`, React 18 lub 19, Node ≥ 20
-do builda. Stan rozmowy żyje w `sessionStorage` pod kluczami `docs-chat:<tenant>:*`
+do builda. Stan rozmowy żyje w `sessionStorage` pod kluczami `docs-chat:<tenant>:*` (bez tenanta: `docs-chat:default:*`)
 (per karta; dwa buildy na jednym originie nie kolidują).
 
 ## Bezpieczeństwo i prywatność

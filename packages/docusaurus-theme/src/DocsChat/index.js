@@ -44,9 +44,10 @@ export default function DocsChat({ options, permalink }) {
     () => getCopy({ assistantName: options.assistantName, examplePrompts: options.examplePrompts }),
     [options.assistantName, options.examplePrompts]
   );
-  const apiUrl = `${options.apiBaseUrl}/api/v1/${options.tenant}/chat`;
-  const feedbackUrl = `${options.apiBaseUrl}/api/v1/${options.tenant}/feedback`;
-  const statusUrl = options.statusProbe ? `${options.apiBaseUrl}/api/v1/${options.tenant}/status` : null;
+  // apiPrefix liczy lifecycle (index.js): /api/v1/<tenant> albo /api/v1 bez tenanta (docs-chat-api v2)
+  const apiUrl = `${options.apiPrefix}/chat`;
+  const feedbackUrl = `${options.apiPrefix}/feedback`;
+  const statusUrl = options.statusProbe ? `${options.apiPrefix}/status` : null;
   const selectionEnabled = options.selectionActions !== false;
 
   // kontrakt żądania (schemas/chat-request): `page.permalink` musi zaczynać się od "/" — poza docs
